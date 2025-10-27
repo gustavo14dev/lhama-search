@@ -317,11 +317,11 @@ export default function Chat({ agent }: { agent: AIAgent }) {
                   <Paperclip className="h-5 w-5" />
                   <span className="sr-only">Anexar</span>
                 </Button>
-                 <Button
+                <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="gap-2 text-muted-foreground"
+                  className="gap-2 rounded-full px-4 py-2 text-muted-foreground transition-colors hover:bg-muted/50"
                   onClick={handleSearchClick}
                   disabled={isLoading || !input.trim()}
                 >
