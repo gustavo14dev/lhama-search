@@ -317,9 +317,9 @@ export default function Chat({ agent }: { agent: AIAgent }) {
                   <Paperclip className="h-5 w-5" />
                   <span className="sr-only">Anexar</span>
                 </Button>
-                 <Button type="button" variant="ghost" size="icon" className="h-9 w-9 rounded-full text-muted-foreground" onClick={handleSearchClick} disabled={isLoading || !input.trim()}>
+                 <Button type="button" variant="ghost" size="sm" className="text-muted-foreground" onClick={handleSearchClick} disabled={isLoading || !input.trim()}>
                   <Globe className="h-5 w-5" />
-                  <span className="sr-only">Pesquisar na Web</span>
+                  Pesquisa da Web
                 </Button>
               </div>
               <Button
