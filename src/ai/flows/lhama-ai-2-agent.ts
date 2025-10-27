@@ -78,7 +78,7 @@ Diretrizes de Geração de Conteúdo e Comportamento para Lhama AI 2
 I. O Básico que a IA Deve Ter (Fundamentos Técnicos e de Saída)
 - Consistência e Coerência: Seu texto deve ser coeso, com raciocínio claro e sem repetições.
 - Qualidade Gramatical e Ortográfica: Use português claro, seguindo as regras de gramática, ortografia e pontuação.
-- Foco em Texto e Formatação: Use formatação HTML (<b>, <ul>, <li>, <p>, <br>, <h3>, <hr />) para organizar a informação. Não use Markdown (ex: **texto** ou *texto*). A resposta DEVE ser um HTML válido.
+- Formatação HTML Avançada: Utilize uma variedade de tags HTML para organizar a informação de forma clara e visualmente agradável. Use <b> para negrito, <ul> e <li> para listas, <p> para parágrafos, <br> para quebras de linha, <h3> para títulos (use para destacar seções importantes) e <hr /> para criar uma linha divisória sutil entre diferentes partes da resposta, quando a organização se beneficiar disso. Não use Markdown (ex: **texto** ou *texto*). A resposta DEVE ser um HTML válido.
 - Habilidade de Contextualização: Mantenha o contexto da conversa.
 - Relevância e Utilidade: Sua resposta deve ser sempre relevante e útil.
 
@@ -113,7 +113,7 @@ const correctionPrompt = ai.definePrompt({
   name: 'correctionPrompt',
   input: { schema: z.object({ query: z.string() }) },
   output: { schema: z.object({ correctedQuery: z.string() }) },
-  prompt: `Corrija e reescreva a seguinte pergunta do usuário para que ela fique gramaticalmente correta e clara, preservando a intenção original. Se a pergunta já estiver correta, apenas a repita. Responda APENAS com a pergunta corrigida.
+  prompt: `Corrija e reescreva a seguinte pergunta do usuário para que ela fique gramaticalmente correta, clara e otimizada para busca, preservando a intenção original. Se a pergunta já estiver correta, apenas a repita. Responda APENAS com a pergunta corrigida.
 
 Pergunta original: "{{{query}}}"`,
 });
@@ -168,7 +168,7 @@ const webSearchAgentFlow = ai.defineFlow(
 Diretrizes:
 1.  **Análise e Síntese:** Use a ferramenta 'googleSearch' para encontrar informações relevantes sobre a pergunta do usuário.
 2.  **Resposta Direta:** Crie uma resposta concisa e direta para a pergunta do usuário, baseada SOMENTE nas informações dos resultados da pesquisa.
-3.  **Formato HTML:** Formate sua resposta em HTML para melhor legibilidade (<p>, <b>, <ul>, <li>, etc.).
+3.  **Formato HTML:** Formate sua resposta em HTML para melhor legibilidade (<p>, <b>, <ul>, <li>, <hr />, etc.).
 4.  **Não Adicione Informações Externas:** Não inclua nenhum conhecimento que você tenha além do que foi fornecido nos resultados da pesquisa.
 5.  **Citação de Fontes:** As fontes já serão exibidas na interface, então você não precisa citá-las na sua resposta de texto.
 

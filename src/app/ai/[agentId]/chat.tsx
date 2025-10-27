@@ -75,7 +75,7 @@ const SearchResultCard = ({ result }: { result: SearchResult }) => {
               </div>
               {thumbnail && (
                  <div className="relative h-20 w-20 flex-shrink-0">
-                    <Image src={thumbnail} alt="" layout="fill" objectFit="cover" className="rounded-md" />
+                    <Image src={thumbnail} alt="" fill objectFit="cover" className="rounded-md" />
                  </div>
               )}
           </div>
@@ -132,19 +132,19 @@ export default function Chat({ agent }: { agent: AIAgent }) {
       setShowSlashCommands(false);
     }
   };
-
-  const handleSubmit = async (e: FormEvent, mode: 'chat' | 'search' = 'chat') => {
-    e.preventDefault();
+  
+  const handleSubmit = async (mode: 'chat' | 'search' = 'chat') => {
     if (!input.trim() || isLoading) return;
 
     const userMessage: Message = { role: 'user', content: input };
     setMessages((prev) => [...prev, userMessage]);
+    const currentInput = input;
     setInput('');
     setShowSlashCommands(false);
     setIsLoading(true);
 
     try {
-      const result = await lhamaAI2Agent({ query: input, mode });
+      const result = await lhamaAI2Agent({ query: currentInput, mode });
       const assistantMessage: Message = {
         role: 'assistant',
         content: result.response,
@@ -158,19 +158,29 @@ export default function Chat({ agent }: { agent: AIAgent }) {
         title: 'Ocorreu um erro',
         description: 'Falha ao obter resposta da IA. Por favor, tente novamente.',
       });
+       // Se der erro, coloca a mensagem do usuário de volta no input
+       setInput(currentInput);
+       // Remove a mensagem do usuário da lista de mensagens
+       setMessages(prev => prev.slice(0, prev.length -1));
     } finally {
       setIsLoading(false);
     }
   };
   
-  const handleSearchClick = (e: FormEvent) => {
-    handleSubmit(e, 'search');
+  const handleFormSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    handleSubmit('chat');
+  };
+  
+  const handleSearchClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    handleSubmit('search');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit(e as unknown as FormEvent, 'chat');
+      handleSubmit('chat');
     }
      if (e.key === 'Escape') {
       setShowSlashCommands(false);
@@ -212,7 +222,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
               )}
               <div
                 className={cn(
-                  'max-w-md rounded-2xl px-4 py-3 text-sm md:text-base',
+                  'max-w-md rounded-2xl px-4 py-3 text-sm md:text-base lg:max-w-xl',
                   message.role === 'assistant'
                     ? 'rounded-tl-none bg-card'
                     : 'rounded-br-none bg-primary/80 text-primary-foreground',
@@ -221,7 +231,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
                 {message.role === 'user' ? (
                    <p className="whitespace-pre-wrap">{message.content}</p>
                 ) : (
-                  <div className="prose prose-sm dark:prose-invert prose-p:m-0 prose-ul:m-0 prose-li:m-0 prose-hr:my-4">
+                  <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-2 first:prose-p:mt-0 last:prose-p:mb-0 prose-ul:my-2 prose-li:my-1 prose-hr:my-4">
                     <div dangerouslySetInnerHTML={{ __html: message.content }} />
                     {message.searchResults && message.searchResults.length > 0 && (
                       <div className="mt-4 space-y-4">
@@ -288,7 +298,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
           )}
           <form
             ref={formRef}
-            onSubmit={(e) => handleSubmit(e, 'chat')}
+            onSubmit={handleFormSubmit}
             className="flex w-full flex-col gap-2 rounded-2xl border bg-card p-2"
           >
             <Textarea
@@ -302,14 +312,14 @@ export default function Chat({ agent }: { agent: AIAgent }) {
               autoFocus
             />
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Button type="button" variant="ghost" size="icon" className="rounded-full text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <Button type="button" variant="ghost" size="icon" className="h-9 w-9 rounded-full text-muted-foreground">
                   <Paperclip className="h-5 w-5" />
                   <span className="sr-only">Anexar</span>
                 </Button>
-                 <Button type="button" variant="ghost" size="icon" className="rounded-full text-muted-foreground" onClick={handleSearchClick}>
+                 <Button type="button" variant="ghost" size="icon" className="h-9 w-9 rounded-full text-muted-foreground" onClick={handleSearchClick} disabled={isLoading || !input.trim()}>
                   <Globe className="h-5 w-5" />
-                  <span className="sr-only">Pesquisar</span>
+                  <span className="sr-only">Pesquisar na Web</span>
                 </Button>
               </div>
               <Button
