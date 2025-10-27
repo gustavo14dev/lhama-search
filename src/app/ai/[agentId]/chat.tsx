@@ -133,7 +133,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
     }
   };
   
-  const handleSubmit = async () => {
+  const handleSubmit = async (mode: 'chat' | 'search' = 'chat') => {
     if (!input.trim() || isLoading) return;
 
     const userMessage: Message = { role: 'user', content: input };
@@ -144,7 +144,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
     setIsLoading(true);
 
     try {
-      const result = await lhamaAI2Agent({ query: currentInput, mode: 'chat' });
+      const result = await lhamaAI2Agent({ query: currentInput, mode });
       const assistantMessage: Message = {
         role: 'assistant',
         content: result.response,
@@ -169,7 +169,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
   
   const handleFormSubmit = (e: FormEvent) => {
     e.preventDefault();
-    handleSubmit();
+    handleSubmit('chat');
   };
   
   const pesquisarNaWeb = () => {
@@ -180,7 +180,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit();
+      handleSubmit('chat');
     }
      if (e.key === 'Escape') {
       setShowSlashCommands(false);
@@ -319,15 +319,27 @@ export default function Chat({ agent }: { agent: AIAgent }) {
                   <span className="sr-only">Anexar</span>
                 </Button>
               </div>
-              <Button
-                type="submit"
-                size="icon"
-                className="h-9 w-9 rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
-                disabled={isLoading || !input.trim()}
-              >
-                <Send className="h-5 w-5" />
-                <span className="sr-only">Enviar</span>
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                    type="button"
+                    variant="outline"
+                    className="h-9 rounded-full px-4"
+                    onClick={() => handleSubmit('search')}
+                    disabled={isLoading || !input.trim()}
+                >
+                    <Globe className="h-5 w-5 mr-2" />
+                    Pesquisa da Web
+                </Button>
+                <Button
+                  type="submit"
+                  size="icon"
+                  className="h-9 w-9 rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
+                  disabled={isLoading || !input.trim()}
+                >
+                  <Send className="h-5 w-5" />
+                  <span className="sr-only">Enviar</span>
+                </Button>
+              </div>
             </div>
           </form>
         </div>
