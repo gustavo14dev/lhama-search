@@ -10,6 +10,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { promises as fs } from 'fs';
+import { googleSearch } from 'genkit/tools';
 
 // Use a relative path from the project root.
 const trainingFilePath = 'src/ai/training.json';
@@ -21,7 +22,6 @@ async function readTrainingData(): Promise<TrainingData> {
     const data = await fs.readFile(trainingFilePath, 'utf-8');
     return JSON.parse(data);
   } catch (error) {
-    // If the file doesn't exist, return an empty object
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       return {};
     }
@@ -40,20 +40,33 @@ async function writeTrainingData(data: TrainingData): Promise<void> {
 
 const LhamaAI2AgentInputSchema = z.object({
   query: z.string().describe('A pergunta do usuário a ser processada pelo agente de IA.'),
+  mode: z.enum(['chat', 'search']).default('chat').describe('O modo de operação: "chat" para conversa padrão ou "search" para pesquisa na web.'),
 });
 export type LhamaAI2AgentInput = z.infer<typeof LhamaAI2AgentInputSchema>;
 
 const LhamaAI2AgentOutputSchema = z.object({
   response: z.string().describe('A resposta gerada pela IA para a pergunta do usuário, formatada em HTML.'),
+  searchResults: z.array(z.object({
+    title: z.string(),
+    link: z.string(),
+    snippet: z.string(),
+    pagemap: z.object({
+      cse_thumbnail: z.array(z.object({ src: z.string() })).optional(),
+      metatags: z.array(z.object({ 'og:site_name': z.string().optional() })).optional(),
+    }).optional(),
+  })).optional().describe('Resultados da pesquisa na web, se aplicável.'),
 });
 export type LhamaAI2AgentOutput = z.infer<typeof LhamaAI2AgentOutputSchema>;
 
 export async function lhamaAI2Agent(input: LhamaAI2AgentInput): Promise<LhamaAI2AgentOutput> {
+  if (input.mode === 'search') {
+    return webSearchAgentFlow(input);
+  }
   return lhamaAI2AgentFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'lhamaAI2AgentPrompt',
+const chatPrompt = ai.definePrompt({
+  name: 'lhamaAI2AgentChatPrompt',
   input: { schema: LhamaAI2AgentInputSchema },
   output: { schema: LhamaAI2AgentOutputSchema },
   prompt: `Você é a Lhama AI 2, uma assistente de IA da empresa Lhama, uma empresa de alta tecnologia da DIFA. Você é amigável, eficiente e prestativa.
@@ -125,7 +138,7 @@ const lhamaAI2AgentFlow = ai.defineFlow(
     }
     
     // 3. Se não estiver no cache, gerar a resposta com a API
-    const { output } = await prompt({ query: correctedQuery });
+    const { output } = await chatPrompt({ query: correctedQuery, mode: 'chat' });
     
     if (output) {
       // 4. Salvar a nova resposta no cache usando a pergunta corrigida como chave
@@ -136,5 +149,50 @@ const lhamaAI2AgentFlow = ai.defineFlow(
     }
 
     return { response: "<p>Desculpe, não consegui processar sua solicitação no momento. 😥</p>" };
+  }
+);
+
+
+// Novo fluxo para pesquisa na web
+const webSearchAgentFlow = ai.defineFlow(
+  {
+    name: 'webSearchAgentFlow',
+    inputSchema: LhamaAI2AgentInputSchema,
+    outputSchema: LhamaAI2AgentOutputSchema,
+    tools: [googleSearch],
+  },
+  async (input) => {
+    const searchResults = await googleSearch(input.query);
+
+    const promptWithContext = `Você é a Lhama AI 2, uma assistente de IA. Sua tarefa é responder à pergunta do usuário com base nos resultados de pesquisa fornecidos.
+
+Diretrizes:
+1.  **Análise e Síntese:** Analise os resultados da pesquisa (trechos de texto e links).
+2.  **Resposta Direta:** Crie uma resposta concisa e direta para a pergunta do usuário. A resposta DEVE ser baseada SOMENTE nas informações dos resultados da pesquisa.
+3.  **Formato HTML:** Formate sua resposta em HTML para melhor legibilidade (<p>, <b>, <ul>, <li>, etc.).
+4.  **Não Adicione Informações Externas:** Não inclua nenhum conhecimento que você tenha além do que foi fornecido nos resultados da pesquisa.
+5.  **Citação de Fontes:** As fontes já serão exibidas na interface, então você não precisa citá-las na sua resposta de texto.
+
+Pergunta do usuário:
+"${input.query}"
+
+Resultados da pesquisa:
+${JSON.stringify(searchResults)}
+
+Agora, gere a resposta em HTML com base nos resultados da pesquisa.`;
+
+    const { output } = await ai.generate({
+        prompt: promptWithContext,
+        output: { schema: LhamaAI2AgentOutputSchema }
+    });
+    
+    if (output) {
+        return {
+            ...output,
+            searchResults: searchResults,
+        };
+    }
+
+    return { response: "<p>Desculpe, não consegui encontrar resultados para sua pesquisa. 😥</p>", searchResults: [] };
   }
 );

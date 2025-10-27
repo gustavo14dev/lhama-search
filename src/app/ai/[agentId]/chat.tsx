@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, type FormEvent } from 'react';
-import { lhamaAI2Agent } from '@/ai/flows/lhama-ai-2-agent';
+import { lhamaAI2Agent, type LhamaAI2AgentOutput } from '@/ai/flows/lhama-ai-2-agent';
 import type { AIAgent } from '@/lib/agents';
 import { agentLogos } from '@/lib/agents';
 import { Button } from '@/components/ui/button';
@@ -14,18 +14,23 @@ import {
   Paperclip,
   Globe,
   Mic,
-  Image,
+  Image as ImageIcon,
   Lightbulb,
   Telescope,
   BookOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
+import Image from 'next/image';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  searchResults?: LhamaAI2AgentOutput['searchResults'];
 }
+
+type SearchResult = NonNullable<LhamaAI2AgentOutput['searchResults']>[number];
 
 const slashCommands = [
   {
@@ -34,7 +39,7 @@ const slashCommands = [
   },
   {
     name: 'Criar imagem',
-    icon: Image,
+    icon: ImageIcon,
   },
   {
     name: 'Pensar',
@@ -49,6 +54,37 @@ const slashCommands = [
     icon: BookOpen,
   },
 ];
+
+const SearchResultCard = ({ result }: { result: SearchResult }) => {
+  const siteName = result.pagemap?.metatags?.[0]?.['og:site_name'] || new URL(result.link).hostname.replace('www.', '');
+  const favicon = `https://www.google.com/s2/favicons?domain=${new URL(result.link).hostname}&sz=32`;
+  const thumbnail = result.pagemap?.cse_thumbnail?.[0]?.src;
+  
+  return (
+    <Card className="overflow-hidden transition-shadow duration-300 hover:shadow-lg">
+       <a href={result.link} target="_blank" rel="noopener noreferrer" className="block hover:bg-muted/40">
+        <CardContent className="p-4">
+          <div className="flex gap-4">
+              <div className="flex-grow">
+                <div className="flex items-center gap-2">
+                    <Image src={favicon} alt={`${siteName} favicon`} width={16} height={16} className="rounded-full" />
+                    <span className="text-xs text-muted-foreground">{siteName}</span>
+                </div>
+                <h3 className="font-medium text-primary hover:underline">{result.title}</h3>
+                <p className="text-sm text-muted-foreground">{result.snippet}</p>
+              </div>
+              {thumbnail && (
+                 <div className="relative h-20 w-20 flex-shrink-0">
+                    <Image src={thumbnail} alt="" layout="fill" objectFit="cover" className="rounded-md" />
+                 </div>
+              )}
+          </div>
+        </CardContent>
+      </a>
+    </Card>
+  );
+};
+
 
 export default function Chat({ agent }: { agent: AIAgent }) {
   const [messages, setMessages] = useState<Message[]>([
@@ -97,7 +133,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
     }
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent, mode: 'chat' | 'search' = 'chat') => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
@@ -108,10 +144,11 @@ export default function Chat({ agent }: { agent: AIAgent }) {
     setIsLoading(true);
 
     try {
-      const result = await lhamaAI2Agent({ query: input });
+      const result = await lhamaAI2Agent({ query: input, mode });
       const assistantMessage: Message = {
         role: 'assistant',
         content: result.response,
+        searchResults: result.searchResults,
       };
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
@@ -125,11 +162,15 @@ export default function Chat({ agent }: { agent: AIAgent }) {
       setIsLoading(false);
     }
   };
+  
+  const handleSearchClick = (e: FormEvent) => {
+    handleSubmit(e, 'search');
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit(e as unknown as FormEvent);
+      handleSubmit(e as unknown as FormEvent, 'chat');
     }
      if (e.key === 'Escape') {
       setShowSlashCommands(false);
@@ -171,17 +212,27 @@ export default function Chat({ agent }: { agent: AIAgent }) {
               )}
               <div
                 className={cn(
-                  'max-w-md rounded-2xl px-4 py-3 text-sm md:text-base prose prose-sm dark:prose-invert',
+                  'max-w-md rounded-2xl px-4 py-3 text-sm md:text-base',
                   message.role === 'assistant'
                     ? 'rounded-tl-none bg-card'
                     : 'rounded-br-none bg-primary/80 text-primary-foreground',
-                  'prose-p:m-0 prose-ul:m-0 prose-li:m-0 prose-hr:my-4'
                 )}
               >
                 {message.role === 'user' ? (
-                  <p className="whitespace-pre-wrap">{message.content}</p>
+                   <p className="whitespace-pre-wrap">{message.content}</p>
                 ) : (
-                  <div dangerouslySetInnerHTML={{ __html: message.content }} />
+                  <div className="prose prose-sm dark:prose-invert prose-p:m-0 prose-ul:m-0 prose-li:m-0 prose-hr:my-4">
+                    <div dangerouslySetInnerHTML={{ __html: message.content }} />
+                    {message.searchResults && message.searchResults.length > 0 && (
+                      <div className="mt-4 space-y-4">
+                         <hr/>
+                         <h3 className="font-bold">Fontes da Web</h3>
+                         {message.searchResults.map((result, i) => (
+                            <SearchResultCard key={i} result={result} />
+                         ))}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
               {message.role === 'user' && (
@@ -237,7 +288,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
           )}
           <form
             ref={formRef}
-            onSubmit={handleSubmit}
+            onSubmit={(e) => handleSubmit(e, 'chat')}
             className="flex w-full flex-col gap-2 rounded-2xl border bg-card p-2"
           >
             <Textarea
@@ -252,20 +303,20 @@ export default function Chat({ agent }: { agent: AIAgent }) {
             />
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Button type="button" variant="ghost" size="sm" className="rounded-full text-muted-foreground">
+                <Button type="button" variant="ghost" size="icon" className="rounded-full text-muted-foreground">
                   <Paperclip className="h-5 w-5" />
-                  <span className="hidden sm:inline">Anexar</span>
+                  <span className="sr-only">Anexar</span>
                 </Button>
-                 <Button type="button" variant="ghost" size="sm" className="rounded-full text-muted-foreground">
+                 <Button type="button" variant="ghost" size="icon" className="rounded-full text-muted-foreground" onClick={handleSearchClick}>
                   <Globe className="h-5 w-5" />
-                  <span className="hidden sm:inline">Pesquisar</span>
+                  <span className="sr-only">Pesquisar</span>
                 </Button>
               </div>
               <Button
                 type="submit"
                 size="icon"
                 className="h-9 w-9 rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
-                disabled={isLoading}
+                disabled={isLoading || !input.trim()}
               >
                 {input.trim() ? (
                   <Send className="h-5 w-5" />
