@@ -4,7 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
-  title: 'Busca Lhama',
+  title: 'Lhama Search',
   description: 'Uma plataforma de navegador para agentes de IA',
 };
 

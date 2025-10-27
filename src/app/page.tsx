@@ -39,7 +39,7 @@ export default function Home() {
         <header className="flex flex-col items-center gap-2 text-center">
           <LlamaIcon className="h-16 w-16 text-primary" />
           <h1 className="font-headline text-5xl font-bold tracking-tight sm:text-6xl md:text-7xl">
-            Busca Lhama
+            Lhama Search
           </h1>
           <p className="max-w-md text-muted-foreground">
             Seu navegador pessoal para uma nova geração de agentes de IA.
