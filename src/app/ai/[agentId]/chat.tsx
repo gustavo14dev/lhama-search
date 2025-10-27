@@ -318,18 +318,6 @@ export default function Chat({ agent }: { agent: AIAgent }) {
                   <Paperclip className="h-5 w-5" />
                   <span className="sr-only">Anexar</span>
                 </Button>
-                <Button
-                  id="btn-pesquisa"
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="gap-2 rounded-full px-4 py-2 text-muted-foreground transition-colors hover:bg-muted/50"
-                  onClick={pesquisarNaWeb}
-                  disabled={!input.trim()}
-                >
-                  <Globe className="h-5 w-5" />
-                  <span>Pesquisa da Web</span>
-                </Button>
               </div>
               <Button
                 type="submit"
@@ -337,12 +325,8 @@ export default function Chat({ agent }: { agent: AIAgent }) {
                 className="h-9 w-9 rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
                 disabled={isLoading || !input.trim()}
               >
-                {input.trim() ? (
-                  <Send className="h-5 w-5" />
-                ) : (
-                  <Mic className="h-5 w-5" />
-                )}
-                <span className="sr-only">{input.trim() ? 'Enviar' : 'Gravar voz'}</span>
+                <Send className="h-5 w-5" />
+                <span className="sr-only">Enviar</span>
               </Button>
             </div>
           </form>
@@ -351,5 +335,3 @@ export default function Chat({ agent }: { agent: AIAgent }) {
     </div>
   );
 }
-
-    
