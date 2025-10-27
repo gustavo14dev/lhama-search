@@ -21,7 +21,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: agent.greeting,
+      content: `<p>${agent.greeting}</p>`,
     },
   ]);
   const [input, setInput] = useState('');
@@ -61,7 +61,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
         title: 'Ocorreu um erro',
         description: 'Falha ao obter resposta da IA. Por favor, tente novamente.',
       });
-      setMessages((prev) => prev.slice(0, -1)); // Remove user message on error
+      // Do not remove user message on error, so they can retry
     } finally {
       setIsLoading(false);
     }
@@ -90,13 +90,18 @@ export default function Chat({ agent }: { agent: AIAgent }) {
               )}
               <div
                 className={cn(
-                  'max-w-md rounded-2xl px-4 py-3 text-sm md:text-base',
+                  'max-w-md rounded-2xl px-4 py-3 text-sm md:text-base prose prose-sm dark:prose-invert',
                   message.role === 'assistant'
                     ? 'rounded-tl-none bg-card'
-                    : 'rounded-br-none bg-primary/80 text-primary-foreground'
+                    : 'rounded-br-none bg-primary/80 text-primary-foreground',
+                  'prose-p:m-0 prose-ul:m-0 prose-li:m-0 prose-hr:my-4'
                 )}
               >
-                <p className="whitespace-pre-wrap">{message.content}</p>
+                {message.role === 'user' ? (
+                  <p className="whitespace-pre-wrap">{message.content}</p>
+                ) : (
+                  <div dangerouslySetInnerHTML={{ __html: message.content }} />
+                )}
               </div>
               {message.role === 'user' && (
                 <Avatar className="h-9 w-9">
