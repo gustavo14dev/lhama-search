@@ -318,8 +318,6 @@ export default function Chat({ agent }: { agent: AIAgent }) {
                   <Paperclip className="h-5 w-5" />
                   <span className="sr-only">Anexar</span>
                 </Button>
-              </div>
-              <div className="flex items-center gap-2">
                  <Button
                     type="button"
                     variant="outline"
@@ -329,6 +327,8 @@ export default function Chat({ agent }: { agent: AIAgent }) {
                     <Globe className="h-5 w-5 mr-2" />
                     Pesquisa da Web
                 </Button>
+              </div>
+              <div className="flex items-center gap-2">
                 <Button
                   type="submit"
                   size="icon"
