@@ -320,12 +320,11 @@ export default function Chat({ agent }: { agent: AIAgent }) {
                 </Button>
               </div>
               <div className="flex items-center gap-2">
-                <Button
+                 <Button
                     type="button"
                     variant="outline"
                     className="h-9 rounded-full px-4"
-                    onClick={() => handleSubmit('search')}
-                    disabled={isLoading || !input.trim()}
+                    onClick={() => {}}
                 >
                     <Globe className="h-5 w-5 mr-2" />
                     Pesquisa da Web
