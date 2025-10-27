@@ -16,7 +16,7 @@ export default function AgentPage({ params }: { params: { agentId: string } }) {
 
   return (
     <div className="flex h-screen flex-col">
-      <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
+      <header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
         <Button asChild variant="ghost" size="icon" className="h-10 w-10">
           <Link href="/">
             <ArrowLeft className="h-5 w-5" />
