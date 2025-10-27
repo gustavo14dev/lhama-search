@@ -78,7 +78,9 @@ export default function Chat({ agent }: { agent: AIAgent }) {
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+      const scrollHeight = textareaRef.current.scrollHeight;
+      const maxHeight = 200; // Corresponde a max-h-52
+      textareaRef.current.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
     }
   }, [input]);
 
@@ -233,7 +235,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
           <form
             ref={formRef}
             onSubmit={handleSubmit}
-            className="relative flex w-full items-end rounded-2xl border bg-card p-2"
+            className="flex w-full flex-col gap-2 rounded-2xl border bg-card p-2"
           >
             <Textarea
               ref={textareaRef}
@@ -241,20 +243,26 @@ export default function Chat({ agent }: { agent: AIAgent }) {
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder={`Mensagem para ${agent.name}...`}
-              className="max-h-48 flex-1 resize-none border-none bg-transparent pr-4 text-base shadow-none focus-visible:ring-0"
+              className="max-h-52 flex-1 resize-none border-none bg-transparent p-2 text-base shadow-none focus-visible:ring-0"
               rows={1}
               autoFocus
             />
-            <div className="flex items-center gap-2">
-              <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground">
-                <Paperclip className="h-5 w-5" />
-                <span className="sr-only">Anexar</span>
-              </Button>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Button type="button" variant="ghost" size="sm" className="text-muted-foreground">
+                  <Paperclip className="h-5 w-5" />
+                  <span className="hidden sm:inline">Anexar</span>
+                </Button>
+                 <Button type="button" variant="ghost" size="sm" className="text-muted-foreground">
+                  <Globe className="h-5 w-5" />
+                  <span className="hidden sm:inline">Pesquisar</span>
+                </Button>
+              </div>
               <Button
                 type="submit"
                 size="icon"
                 className="h-9 w-9 rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
-                disabled={isLoading || !input.trim()}
+                disabled={isLoading}
               >
                 {input.trim() ? (
                   <Send className="h-5 w-5" />
@@ -270,3 +278,5 @@ export default function Chat({ agent }: { agent: AIAgent }) {
     </div>
   );
 }
+
+    
