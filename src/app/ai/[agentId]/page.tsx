@@ -20,7 +20,7 @@ export default function AgentPage({ params }: { params: { agentId: string } }) {
         <Button asChild variant="ghost" size="icon" className="h-10 w-10">
           <Link href="/">
             <ArrowLeft className="h-5 w-5" />
-            <span className="sr-only">Back to search</span>
+            <span className="sr-only">Voltar para a busca</span>
           </Link>
         </Button>
         <div className="flex items-center gap-3">
@@ -30,7 +30,7 @@ export default function AgentPage({ params }: { params: { agentId: string } }) {
           <div>
             <h1 className="text-lg font-semibold">{agent.name}</h1>
             <p className="text-sm text-muted-foreground">
-              By {agent.company}
+              Por {agent.company}
             </p>
           </div>
         </div>

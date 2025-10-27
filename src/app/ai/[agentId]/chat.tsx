@@ -55,11 +55,11 @@ export default function Chat({ agent }: { agent: AIAgent }) {
       };
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
-      console.error('Error calling AI agent:', error);
+      console.error('Erro ao chamar o agente de IA:', error);
       toast({
         variant: 'destructive',
-        title: 'An error occurred',
-        description: 'Failed to get a response from the AI. Please try again.',
+        title: 'Ocorreu um erro',
+        description: 'Falha ao obter resposta da IA. Por favor, tente novamente.',
       });
       setMessages((prev) => prev.slice(0, -1)); // Remove user message on error
     } finally {
@@ -132,7 +132,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={`Message ${agent.name}...`}
+              placeholder={`Mensagem para ${agent.name}...`}
               className="h-12 flex-1 rounded-full bg-card pr-14 text-base"
               autoFocus
             />
@@ -143,7 +143,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
               disabled={isLoading || !input.trim()}
             >
               <Send className="h-5 w-5" />
-              <span className="sr-only">Send</span>
+              <span className="sr-only">Enviar</span>
             </Button>
           </form>
         </div>

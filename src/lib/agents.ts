@@ -22,9 +22,9 @@ export const aiAgents: AIAgent[] = [
     company: 'Lhama',
     family: 'Lhama AI',
     description:
-      'A helpful and friendly AI assistant capable of answering a wide range of user requests.',
+      'Uma assistente de IA prestativa e amigável, capaz de responder a uma vasta gama de solicitações.',
     logo: 'lhama',
-    greeting: "Hello! I'm Lhama AI 2. How can I assist you today?",
+    greeting: 'Olá! 👋 Eu sou a Lhama AI 2. Como posso te ajudar hoje?',
   },
 ];
 

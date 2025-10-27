@@ -39,10 +39,10 @@ export default function Home() {
         <header className="flex flex-col items-center gap-2 text-center">
           <LlamaIcon className="h-16 w-16 text-primary" />
           <h1 className="font-headline text-5xl font-bold tracking-tight sm:text-6xl md:text-7xl">
-            Lhama Search
+            Busca Lhama
           </h1>
           <p className="max-w-md text-muted-foreground">
-            Your personal browser for a new generation of AI agents.
+            Seu navegador pessoal para uma nova geração de agentes de IA.
           </p>
         </header>
 
@@ -50,7 +50,7 @@ export default function Home() {
           <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search for an AI agent..."
+            placeholder="Buscar por um agente de IA..."
             className="h-14 w-full rounded-full bg-card pl-12 pr-6 text-lg"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -103,10 +103,10 @@ export default function Home() {
           ) : (
             <div className="flex h-48 flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed bg-card text-center">
               <h3 className="font-headline text-xl font-semibold">
-                No Agents Found
+                Nenhum Agente Encontrado
               </h3>
               <p className="text-muted-foreground">
-                Try a different search term.
+                Tente um termo de busca diferente.
               </p>
             </div>
           )}
