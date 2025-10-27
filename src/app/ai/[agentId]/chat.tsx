@@ -151,7 +151,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
   const LogoComponent = agentLogos[agent.logo];
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex flex-1 flex-col overflow-hidden">
       <ScrollArea className="flex-1" ref={scrollAreaRef}>
         <div className="mx-auto max-w-3xl space-y-6 p-4 pb-4 md:p-6 md:pb-6">
           {messages.map((message, index) => (
