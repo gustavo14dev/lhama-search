@@ -151,9 +151,9 @@ export default function Chat({ agent }: { agent: AIAgent }) {
   const LogoComponent = agentLogos[agent.logo];
 
   return (
-    <div className="relative flex-1">
-      <ScrollArea className="absolute inset-0" ref={scrollAreaRef}>
-        <div className="mx-auto max-w-3xl space-y-6 p-4 pb-28 md:p-6 md:pb-28">
+    <div className="flex flex-1 flex-col">
+      <ScrollArea className="flex-1" ref={scrollAreaRef}>
+        <div className="mx-auto max-w-3xl space-y-6 p-4 pb-4 md:p-6 md:pb-6">
           {messages.map((message, index) => (
             <div
               key={index}
@@ -209,7 +209,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
           )}
         </div>
       </ScrollArea>
-      <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-background via-background/80 to-transparent">
+      <div className="border-t bg-background">
         <div className="relative mx-auto max-w-3xl p-4">
            {showSlashCommands && (
             <div className="absolute bottom-full mb-2 w-[calc(100%-2rem)] animate-in fade-in-50 slide-in-from-bottom-4 rounded-xl border bg-card p-2 shadow-lg duration-300">
