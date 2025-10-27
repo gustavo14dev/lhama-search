@@ -17,3 +17,14 @@ export const LlamaIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <path d="M14 13h-1" />
   </svg>
 );
+
+export const SparkleIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    {...props}
+  >
+    <path d="M12 0C10.84 6.06 6.06 10.84 0 12c6.06 1.16 10.84 5.94 12 12c1.16-6.06 5.94-10.84 12-12C17.94 10.84 13.16 6.06 12 0z" />
+  </svg>
+);

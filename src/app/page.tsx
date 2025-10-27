@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Search } from 'lucide-react';
-import { LlamaIcon } from '@/components/icons';
+import { SparkleIcon } from '@/components/icons';
 
 export default function Home() {
   const [search, setSearch] = useState('');
@@ -37,7 +37,7 @@ export default function Home() {
     <main className="flex min-h-screen w-full flex-col items-center p-4 sm:p-8">
       <div className="flex w-full max-w-4xl flex-col items-center gap-8">
         <header className="flex flex-col items-center gap-2 text-center">
-          <LlamaIcon className="h-16 w-16 text-primary" />
+          <SparkleIcon className="h-16 w-16 text-primary" />
           <h1 className="font-headline text-5xl font-bold tracking-tight sm:text-6xl md:text-7xl">
             Lhama Search
           </h1>

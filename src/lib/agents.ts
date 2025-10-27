@@ -1,8 +1,8 @@
 import type React from 'react';
-import { LlamaIcon } from '@/components/icons';
+import { LlamaIcon, SparkleIcon } from '@/components/icons';
 
 export const agentLogos = {
-  lhama: LlamaIcon,
+  lhama: SparkleIcon,
 };
 
 export interface AIAgent {
