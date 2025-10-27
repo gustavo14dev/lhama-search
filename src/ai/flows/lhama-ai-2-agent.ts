@@ -150,16 +150,6 @@ Responda à seguinte pergunta do usuário:
 `,
 });
 
-const correctionPrompt = ai.definePrompt({
-  name: 'correctionPrompt',
-  input: { schema: z.object({ query: z.string() }) },
-  output: { schema: z.object({ correctedQuery: z.string() }) },
-  prompt: `Corrija e reescreva a seguinte pergunta do usuário para que ela fique gramaticalmente correta, clara e otimizada para busca, preservando a intenção original. Se a pergunta já estiver correta, apenas a repita. Responda APENAS com a pergunta corrigida.
-
-Pergunta original: "{{{query}}}"`,
-});
-
-
 const lhamaAI2AgentFlow = ai.defineFlow(
   {
     name: 'lhamaAI2AgentFlow',
@@ -168,23 +158,20 @@ const lhamaAI2AgentFlow = ai.defineFlow(
   },
   async (input) => {
     const trainingData = await readTrainingData();
+    const userQuery = input.query.trim().toLowerCase();
 
-    // 1. Corrigir a pergunta do usuário
-    const correctionResult = await correctionPrompt(input);
-    const correctedQuery = correctionResult.output?.correctedQuery.trim().toLowerCase() || input.query.trim().toLowerCase();
-
-    // 2. Verificar o cache com a pergunta corrigida
-    if (trainingData[correctedQuery]) {
-      return { response: trainingData[correctedQuery] };
+    // 1. Verificar o cache com a pergunta do usuário
+    if (trainingData[userQuery]) {
+      return { response: trainingData[userQuery] };
     }
     
-    // 3. Se não estiver no cache, gerar a resposta com a API
-    const { output } = await chatPrompt({ query: correctedQuery, mode: 'chat' });
+    // 2. Se não estiver no cache, gerar a resposta com a API
+    const { output } = await chatPrompt({ query: userQuery, mode: 'chat' });
     
     if (output) {
-      // 4. Salvar a nova resposta no cache usando a pergunta corrigida como chave
+      // 3. Salvar a nova resposta no cache usando a pergunta como chave
       const currentTrainingData = await readTrainingData();
-      currentTrainingData[correctedQuery] = output.response;
+      currentTrainingData[userQuery] = output.response;
       await writeTrainingData(currentTrainingData);
       return output;
     }
