@@ -10,7 +10,6 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { promises as fs } from 'fs';
-import { googleSearch } from '@genkit-ai/google-search';
 
 // Use a relative path from the project root.
 const trainingFilePath = 'src/ai/training.json';
@@ -37,6 +36,48 @@ async function writeTrainingData(data: TrainingData): Promise<void> {
     console.error('Error writing training data:', error);
   }
 }
+
+// Definição da ferramenta para chamar a Google Custom Search API
+const customGoogleSearch = ai.defineTool(
+  {
+    name: 'customGoogleSearch',
+    description: 'Searches the web using Google Custom Search API. Use this for recent events or topics outside of common knowledge.',
+    inputSchema: z.object({ query: z.string() }),
+    outputSchema: z.any(),
+  },
+  async (input) => {
+    const apiKey = process.env.GOOGLE_API_KEY;
+    const searchEngineId = process.env.GOOGLE_CSE_ID;
+
+    if (!apiKey || !searchEngineId) {
+      console.error("Google API Key or Search Engine ID is not configured.");
+      return { error: "Search API is not configured." };
+    }
+
+    const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${searchEngineId}&q=${encodeURIComponent(input.query)}`;
+
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Google Custom Search API error:', errorData);
+        return { error: `API request failed with status ${response.status}` };
+      }
+      const data = await response.json();
+      // Mapeia os resultados para o formato esperado pelo resto do código
+      return (data.items || []).map((item: any) => ({
+        title: item.title,
+        link: item.link,
+        snippet: item.snippet,
+        pagemap: item.pagemap,
+      }));
+    } catch (err) {
+      console.error('Error fetching search results:', err);
+      return { error: 'Failed to fetch search results.' };
+    }
+  }
+);
+
 
 const LhamaAI2AgentInputSchema = z.object({
   query: z.string().describe('A pergunta do usuário a ser processada pelo agente de IA.'),
@@ -153,20 +194,20 @@ const lhamaAI2AgentFlow = ai.defineFlow(
 );
 
 
-// Novo fluxo para pesquisa na web
+// Fluxo de pesquisa na web atualizado para usar a nova ferramenta
 const webSearchAgentFlow = ai.defineFlow(
   {
     name: 'webSearchAgentFlow',
     inputSchema: LhamaAI2AgentInputSchema,
     outputSchema: LhamaAI2AgentOutputSchema,
-    tools: [googleSearch],
+    tools: [customGoogleSearch],
   },
   async (input) => {
     const llmResponse = await ai.generate({
-      prompt: `Você é a Lhama AI 2, uma assistente de IA. Sua tarefa é responder à pergunta do usuário com base nos resultados de pesquisa fornecidos pela ferramenta 'googleSearch'.
+      prompt: `Você é a Lhama AI 2, uma assistente de IA. Sua tarefa é responder à pergunta do usuário com base nos resultados de pesquisa fornecidos pela ferramenta 'customGoogleSearch'.
 
 Diretrizes:
-1.  **Análise e Síntese:** Use a ferramenta 'googleSearch' para encontrar informações relevantes sobre a pergunta do usuário.
+1.  **Análise e Síntese:** Use a ferramenta 'customGoogleSearch' para encontrar informações relevantes sobre a pergunta do usuário.
 2.  **Resposta Direta:** Crie uma resposta concisa e direta para a pergunta do usuário, baseada SOMENTE nas informações dos resultados da pesquisa.
 3.  **Formato HTML:** Formate sua resposta em HTML para melhor legibilidade (<p>, <b>, <ul>, <li>, <hr />, etc.).
 4.  **Não Adicione Informações Externas:** Não inclua nenhum conhecimento que você tenha além do que foi fornecido nos resultados da pesquisa.
@@ -176,12 +217,12 @@ Pergunta do usuário:
 "${input.query}"
 
 Agora, use a ferramenta de busca para pesquisar e depois gere a resposta em HTML.`,
-      tools: [googleSearch],
+      tools: [customGoogleSearch],
       output: { schema: LhamaAI2AgentOutputSchema },
     });
 
     const searchResults = llmResponse.references()
-      .filter((ref) => ref.tool?.name === 'googleSearch')
+      .filter((ref) => ref.tool?.name === 'customGoogleSearch')
       .flatMap((ref) => ref.output as any[]);
 
     if (llmResponse.output) {
