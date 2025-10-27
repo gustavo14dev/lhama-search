@@ -10,9 +10,9 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { promises as fs } from 'fs';
-import path from 'path';
 
-const trainingFilePath = path.resolve(process.cwd(), 'src', 'ai', 'training.json');
+// Use a relative path from the project root.
+const trainingFilePath = 'src/ai/training.json';
 
 type TrainingData = Record<string, string>;
 
