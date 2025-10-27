@@ -4,13 +4,13 @@ import { useState, useRef, useEffect, type FormEvent } from 'react';
 import { lhamaAI2Agent } from '@/ai/flows/lhama-ai-2-agent';
 import type { AIAgent } from '@/lib/agents';
 import { agentLogos } from '@/lib/agents';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Send, User } from 'lucide-react';
+import { Send, User, Paperclip, Globe } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -28,6 +28,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -37,6 +38,13 @@ export default function Chat({ agent }: { agent: AIAgent }) {
       });
     }
   }, [messages]);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [input]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -61,9 +69,15 @@ export default function Chat({ agent }: { agent: AIAgent }) {
         title: 'Ocorreu um erro',
         description: 'Falha ao obter resposta da IA. Por favor, tente novamente.',
       });
-      // Do not remove user message on error, so they can retry
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e as unknown as FormEvent);
     }
   };
 
@@ -132,24 +146,39 @@ export default function Chat({ agent }: { agent: AIAgent }) {
         <div className="mx-auto max-w-3xl p-4">
           <form
             onSubmit={handleSubmit}
-            className="relative flex items-center gap-2"
+            className="relative rounded-2xl border bg-card p-2"
           >
-            <Input
+            <Textarea
+              ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
               placeholder={`Mensagem para ${agent.name}...`}
-              className="h-12 flex-1 rounded-full bg-card pr-14 text-base"
+              className="max-h-48 resize-none border-none bg-transparent pr-14 text-base shadow-none focus-visible:ring-0"
+              rows={1}
               autoFocus
             />
-            <Button
-              type="submit"
-              size="icon"
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full"
-              disabled={isLoading || !input.trim()}
-            >
-              <Send className="h-5 w-5" />
-              <span className="sr-only">Enviar</span>
-            </Button>
+            <div className="mt-2 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground">
+                        <Paperclip className="h-5 w-5" />
+                        <span className="sr-only">Anexar</span>
+                    </Button>
+                    <Button type="button" variant="ghost" size="sm" className="gap-2 text-muted-foreground">
+                        <Globe className="h-5 w-5" />
+                        <span>Search</span>
+                    </Button>
+                </div>
+                <Button
+                  type="submit"
+                  size="icon"
+                  className="h-9 w-9 rounded-full"
+                  disabled={isLoading || !input.trim()}
+                >
+                  <Send className="h-5 w-5" />
+                  <span className="sr-only">Enviar</span>
+                </Button>
+            </div>
           </form>
         </div>
       </div>
