@@ -326,7 +326,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
                   disabled={isLoading || !input.trim()}
                 >
                   <Globe className="h-5 w-5" />
-                  Pesquisa da Web
+                  <span>Pesquisa da Web</span>
                 </Button>
               </div>
               <Button
