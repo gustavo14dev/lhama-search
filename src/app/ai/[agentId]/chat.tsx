@@ -8,7 +8,17 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Send, User, Paperclip, Globe } from 'lucide-react';
+import {
+  Send,
+  User,
+  Paperclip,
+  Globe,
+  Mic,
+  Image,
+  Lightbulb,
+  Telescope,
+  BookOpen,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -16,6 +26,29 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
 }
+
+const slashCommands = [
+  {
+    name: 'Adicionar fotos e arquivos',
+    icon: Paperclip,
+  },
+  {
+    name: 'Criar imagem',
+    icon: Image,
+  },
+  {
+    name: 'Pensar',
+    icon: Lightbulb,
+  },
+  {
+    name: 'Investigar',
+    icon: Telescope,
+  },
+  {
+    name: 'Estudar e aprender',
+    icon: BookOpen,
+  },
+];
 
 export default function Chat({ agent }: { agent: AIAgent }) {
   const [messages, setMessages] = useState<Message[]>([
@@ -26,9 +59,12 @@ export default function Chat({ agent }: { agent: AIAgent }) {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showSlashCommands, setShowSlashCommands] = useState(false);
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -46,6 +82,16 @@ export default function Chat({ agent }: { agent: AIAgent }) {
     }
   }, [input]);
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setInput(value);
+    if (value.startsWith('/')) {
+      setShowSlashCommands(true);
+    } else {
+      setShowSlashCommands(false);
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
@@ -53,6 +99,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
     const userMessage: Message = { role: 'user', content: input };
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
+    setShowSlashCommands(false);
     setIsLoading(true);
 
     try {
@@ -79,7 +126,22 @@ export default function Chat({ agent }: { agent: AIAgent }) {
       e.preventDefault();
       handleSubmit(e as unknown as FormEvent);
     }
+     if (e.key === 'Escape') {
+      setShowSlashCommands(false);
+    }
   };
+  
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (formRef.current && !formRef.current.contains(event.target as Node)) {
+        setShowSlashCommands(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const LogoComponent = agentLogos[agent.logo];
 
@@ -143,41 +205,64 @@ export default function Chat({ agent }: { agent: AIAgent }) {
         </div>
       </ScrollArea>
       <div className="border-t bg-background">
-        <div className="mx-auto max-w-3xl p-4">
+        <div className="relative mx-auto max-w-3xl p-4">
+           {showSlashCommands && (
+            <div className="absolute bottom-full mb-2 w-[calc(100%-2rem)] animate-in fade-in-50 slide-in-from-bottom-4 rounded-xl border bg-card p-2 shadow-lg duration-300">
+              <p className="px-2 py-1 text-xs font-semibold text-muted-foreground">
+                Comandos
+              </p>
+              <ul>
+                {slashCommands.map((command) => (
+                  <li key={command.name}>
+                    <button
+                      className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left text-sm hover:bg-muted"
+                      onClick={() => {
+                        setInput(`/${command.name.toLowerCase()} `);
+                        setShowSlashCommands(false);
+                        textareaRef.current?.focus();
+                      }}
+                    >
+                      <command.icon className="h-4 w-4" />
+                      {command.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <form
+            ref={formRef}
             onSubmit={handleSubmit}
-            className="relative rounded-2xl border bg-card p-2"
+            className="relative flex w-full items-end rounded-2xl border bg-card p-2"
           >
             <Textarea
               ref={textareaRef}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder={`Mensagem para ${agent.name}...`}
-              className="max-h-48 resize-none border-none bg-transparent pr-14 text-base shadow-none focus-visible:ring-0"
+              className="max-h-48 flex-1 resize-none border-none bg-transparent pr-4 text-base shadow-none focus-visible:ring-0"
               rows={1}
               autoFocus
             />
-            <div className="mt-2 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground">
-                        <Paperclip className="h-5 w-5" />
-                        <span className="sr-only">Anexar</span>
-                    </Button>
-                    <Button type="button" variant="ghost" size="sm" className="gap-2 text-muted-foreground">
-                        <Globe className="h-5 w-5" />
-                        <span>Search</span>
-                    </Button>
-                </div>
-                <Button
-                  type="submit"
-                  size="icon"
-                  className="h-9 w-9 rounded-full"
-                  disabled={isLoading || !input.trim()}
-                >
+            <div className="flex items-center gap-2">
+              <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground">
+                <Paperclip className="h-5 w-5" />
+                <span className="sr-only">Anexar</span>
+              </Button>
+              <Button
+                type="submit"
+                size="icon"
+                className="h-9 w-9 rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
+                disabled={isLoading || !input.trim()}
+              >
+                {input.trim() ? (
                   <Send className="h-5 w-5" />
-                  <span className="sr-only">Enviar</span>
-                </Button>
+                ) : (
+                  <Mic className="h-5 w-5" />
+                )}
+                <span className="sr-only">{input.trim() ? 'Enviar' : 'Gravar voz'}</span>
+              </Button>
             </div>
           </form>
         </div>
