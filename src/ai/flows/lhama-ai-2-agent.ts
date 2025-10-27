@@ -10,7 +10,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { promises as fs } from 'fs';
-import { googleSearch } from 'genkit/tools';
+import { googleSearch } from '@genkit-ai/google-genai';
 
 // Use a relative path from the project root.
 const trainingFilePath = 'src/ai/training.json';
