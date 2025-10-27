@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, type FormEvent } from 'react';
 import { lhamaAI2Agent } from '@/ai/flows/lhama-ai-2-agent';
 import type { AIAgent } from '@/lib/agents';
+import { agentLogos } from '@/lib/agents';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -66,6 +67,8 @@ export default function Chat({ agent }: { agent: AIAgent }) {
     }
   };
 
+  const LogoComponent = agentLogos[agent.logo];
+
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <ScrollArea className="flex-1" ref={scrollAreaRef}>
@@ -81,7 +84,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
               {message.role === 'assistant' && (
                 <Avatar className="h-9 w-9 border-2 border-primary/20">
                   <div className="flex h-full w-full items-center justify-center bg-primary/10">
-                    <agent.logo className="h-5 w-5 text-primary" />
+                    <LogoComponent className="h-5 w-5 text-primary" />
                   </div>
                 </Avatar>
               )}
@@ -108,7 +111,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
             <div className="flex animate-in fade-in-50 items-start gap-4">
               <Avatar className="h-9 w-9 border-2 border-primary/20">
                 <div className="flex h-full w-full items-center justify-center bg-primary/10">
-                  <agent.logo className="h-5 w-5 text-primary" />
+                  <LogoComponent className="h-5 w-5 text-primary" />
                 </div>
               </Avatar>
               <div className="flex items-center gap-2 rounded-2xl bg-card px-4 py-3">

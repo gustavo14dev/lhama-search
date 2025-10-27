@@ -1,13 +1,17 @@
 import type React from 'react';
 import { LlamaIcon } from '@/components/icons';
 
+export const agentLogos = {
+  lhama: LlamaIcon,
+};
+
 export interface AIAgent {
   id: string;
   name: string;
   company: string;
   family: string;
   description: string;
-  logo: React.ComponentType<{ className?: string }>;
+  logo: keyof typeof agentLogos;
   greeting: string;
 }
 
@@ -19,7 +23,7 @@ export const aiAgents: AIAgent[] = [
     family: 'Lhama AI',
     description:
       'A helpful and friendly AI assistant capable of answering a wide range of user requests.',
-    logo: LlamaIcon,
+    logo: 'lhama',
     greeting: "Hello! I'm Lhama AI 2. How can I assist you today?",
   },
 ];

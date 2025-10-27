@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getAgentById } from '@/lib/agents';
+import { getAgentById, agentLogos } from '@/lib/agents';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Chat from './chat';
@@ -11,6 +11,8 @@ export default function AgentPage({ params }: { params: { agentId: string } }) {
   if (!agent) {
     notFound();
   }
+
+  const LogoComponent = agentLogos[agent.logo];
 
   return (
     <div className="flex h-screen flex-col">
@@ -23,7 +25,7 @@ export default function AgentPage({ params }: { params: { agentId: string } }) {
         </Button>
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-            <agent.logo className="h-6 w-6 text-primary" />
+            <LogoComponent className="h-6 w-6 text-primary" />
           </div>
           <div>
             <h1 className="text-lg font-semibold">{agent.name}</h1>

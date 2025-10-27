@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { aiAgents, groupAgentsByCompany } from '@/lib/agents';
+import { aiAgents, groupAgentsByCompany, agentLogos } from '@/lib/agents';
 import { Input } from '@/components/ui/input';
 import {
   Card,
@@ -65,33 +65,38 @@ export default function Home() {
                   {company}
                 </h2>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {agents.map((agent) => (
-                    <Link
-                      href={`/ai/${agent.id}`}
-                      key={agent.id}
-                      className="group"
-                    >
-                      <Card className="h-full transform-gpu transition-all duration-300 ease-in-out group-hover:-translate-y-1 group-hover:shadow-xl group-hover:shadow-primary/10">
-                        <CardHeader>
-                          <div className="mb-4 flex items-center gap-4">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                              <agent.logo className="h-6 w-6 text-primary" />
+                  {agents.map((agent) => {
+                    const LogoComponent = agentLogos[agent.logo];
+                    return (
+                      <Link
+                        href={`/ai/${agent.id}`}
+                        key={agent.id}
+                        className="group"
+                      >
+                        <Card className="h-full transform-gpu transition-all duration-300 ease-in-out group-hover:-translate-y-1 group-hover:shadow-xl group-hover:shadow-primary/10">
+                          <CardHeader>
+                            <div className="mb-4 flex items-center gap-4">
+                              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
+                                <LogoComponent className="h-6 w-6 text-primary" />
+                              </div>
+                              <div>
+                                <CardTitle className="text-lg">
+                                  {agent.name}
+                                </CardTitle>
+                                <CardDescription>
+                                  {agent.family}
+                                </CardDescription>
+                              </div>
                             </div>
-                            <div>
-                              <CardTitle className="text-lg">
-                                {agent.name}
-                              </CardTitle>
-                              <CardDescription>{agent.family}</CardDescription>
-                            </div>
-                          </div>
 
-                          <CardDescription>
-                            {agent.description}
-                          </CardDescription>
-                        </CardHeader>
-                      </Card>
-                    </Link>
-                  ))}
+                            <CardDescription>
+                              {agent.description}
+                            </CardDescription>
+                          </CardHeader>
+                        </Card>
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
             ))
