@@ -133,7 +133,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
     }
   };
   
-  const handleSubmit = async (mode: 'chat' | 'search' = 'chat') => {
+  const handleSubmit = async () => {
     if (!input.trim() || isLoading) return;
 
     const userMessage: Message = { role: 'user', content: input };
@@ -144,7 +144,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
     setIsLoading(true);
 
     try {
-      const result = await lhamaAI2Agent({ query: currentInput, mode });
+      const result = await lhamaAI2Agent({ query: currentInput, mode: 'chat' });
       const assistantMessage: Message = {
         role: 'assistant',
         content: result.response,
@@ -169,18 +169,18 @@ export default function Chat({ agent }: { agent: AIAgent }) {
   
   const handleFormSubmit = (e: FormEvent) => {
     e.preventDefault();
-    handleSubmit('chat');
+    handleSubmit();
   };
   
-  const handleSearchClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    handleSubmit('search');
+  const pesquisarNaWeb = () => {
+    if (!input.trim()) return;
+    window.open(`https://www.google.com/search?q=${encodeURIComponent(input)}`, "_blank");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit('chat');
+      handleSubmit();
     }
      if (e.key === 'Escape') {
       setShowSlashCommands(false);
@@ -303,6 +303,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
           >
             <Textarea
               ref={textareaRef}
+              id="campo-pesquisa"
               value={input}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
@@ -318,12 +319,13 @@ export default function Chat({ agent }: { agent: AIAgent }) {
                   <span className="sr-only">Anexar</span>
                 </Button>
                 <Button
+                  id="btn-pesquisa"
                   type="button"
                   variant="ghost"
                   size="sm"
                   className="gap-2 rounded-full px-4 py-2 text-muted-foreground transition-colors hover:bg-muted/50"
-                  onClick={handleSearchClick}
-                  disabled={isLoading || !input.trim()}
+                  onClick={pesquisarNaWeb}
+                  disabled={!input.trim()}
                 >
                   <Globe className="h-5 w-5" />
                   <span>Pesquisa da Web</span>
@@ -349,3 +351,5 @@ export default function Chat({ agent }: { agent: AIAgent }) {
     </div>
   );
 }
+
+    
