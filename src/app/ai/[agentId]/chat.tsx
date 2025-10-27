@@ -249,11 +249,11 @@ export default function Chat({ agent }: { agent: AIAgent }) {
             />
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Button type="button" variant="ghost" size="sm" className="text-muted-foreground">
+                <Button type="button" variant="ghost" size="sm" className="rounded-full text-muted-foreground">
                   <Paperclip className="h-5 w-5" />
                   <span className="hidden sm:inline">Anexar</span>
                 </Button>
-                 <Button type="button" variant="ghost" size="sm" className="text-muted-foreground">
+                 <Button type="button" variant="ghost" size="sm" className="rounded-full text-muted-foreground">
                   <Globe className="h-5 w-5" />
                   <span className="hidden sm:inline">Pesquisar</span>
                 </Button>
@@ -278,5 +278,3 @@ export default function Chat({ agent }: { agent: AIAgent }) {
     </div>
   );
 }
-
-    
