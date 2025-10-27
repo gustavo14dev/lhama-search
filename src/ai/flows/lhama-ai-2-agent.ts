@@ -162,13 +162,12 @@ const webSearchAgentFlow = ai.defineFlow(
     tools: [googleSearch],
   },
   async (input) => {
-    const searchResults = await googleSearch(input.query);
-
-    const promptWithContext = `Você é a Lhama AI 2, uma assistente de IA. Sua tarefa é responder à pergunta do usuário com base nos resultados de pesquisa fornecidos.
+    const llmResponse = await ai.generate({
+      prompt: `Você é a Lhama AI 2, uma assistente de IA. Sua tarefa é responder à pergunta do usuário com base nos resultados de pesquisa fornecidos pela ferramenta 'googleSearch'.
 
 Diretrizes:
-1.  **Análise e Síntese:** Analise os resultados da pesquisa (trechos de texto e links).
-2.  **Resposta Direta:** Crie uma resposta concisa e direta para a pergunta do usuário. A resposta DEVE ser baseada SOMENTE nas informações dos resultados da pesquisa.
+1.  **Análise e Síntese:** Use a ferramenta 'googleSearch' para encontrar informações relevantes sobre a pergunta do usuário.
+2.  **Resposta Direta:** Crie uma resposta concisa e direta para a pergunta do usuário, baseada SOMENTE nas informações dos resultados da pesquisa.
 3.  **Formato HTML:** Formate sua resposta em HTML para melhor legibilidade (<p>, <b>, <ul>, <li>, etc.).
 4.  **Não Adicione Informações Externas:** Não inclua nenhum conhecimento que você tenha além do que foi fornecido nos resultados da pesquisa.
 5.  **Citação de Fontes:** As fontes já serão exibidas na interface, então você não precisa citá-las na sua resposta de texto.
@@ -176,21 +175,20 @@ Diretrizes:
 Pergunta do usuário:
 "${input.query}"
 
-Resultados da pesquisa:
-${JSON.stringify(searchResults)}
-
-Agora, gere a resposta em HTML com base nos resultados da pesquisa.`;
-
-    const { output } = await ai.generate({
-        prompt: promptWithContext,
-        output: { schema: LhamaAI2AgentOutputSchema }
+Agora, use a ferramenta de busca para pesquisar e depois gere a resposta em HTML.`,
+      tools: [googleSearch],
+      output: { schema: LhamaAI2AgentOutputSchema },
     });
-    
-    if (output) {
-        return {
-            ...output,
-            searchResults: searchResults,
-        };
+
+    const searchResults = llmResponse.references()
+      .filter((ref) => ref.tool?.name === 'googleSearch')
+      .flatMap((ref) => ref.output as any[]);
+
+    if (llmResponse.output) {
+      return {
+        ...llmResponse.output,
+        searchResults: searchResults,
+      };
     }
 
     return { response: "<p>Desculpe, não consegui encontrar resultados para sua pesquisa. 😥</p>", searchResults: [] };
