@@ -13,7 +13,6 @@ import {
   User,
   Paperclip,
   Globe,
-  Mic,
   Image as ImageIcon,
   Lightbulb,
   Telescope,
@@ -317,12 +316,11 @@ export default function Chat({ agent }: { agent: AIAgent }) {
                   <Paperclip className="h-5 w-5" />
                   <span className="sr-only">Anexar</span>
                 </Button>
-                <Button
+                 <Button
                     type="button"
                     variant="outline"
                     className="h-9 rounded-full px-4"
                     onClick={pesquisarNaWeb}
-                    disabled={isLoading || !input.trim()}
                 >
                     <Globe className="mr-2 h-5 w-5" />
                     Pesquisa da Web
