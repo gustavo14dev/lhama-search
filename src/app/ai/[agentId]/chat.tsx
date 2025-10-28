@@ -26,6 +26,7 @@ import { Card, CardContent } from '@/components/ui/card';
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  isGreeting?: boolean;
   searchResults?: LhamaAI2AgentOutput['searchResults'];
 }
 
@@ -89,7 +90,8 @@ export default function Chat({ agent }: { agent: AIAgent }) {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: `<p>${agent.greeting}</p>`,
+      content: '', // O conteúdo é renderizado condicionalmente
+      isGreeting: true,
     },
   ]);
   const [input, setInput] = useState('');
@@ -132,19 +134,18 @@ export default function Chat({ agent }: { agent: AIAgent }) {
       setShowSlashCommands(false);
     }
   };
-  
-  const handleSubmit = async () => {
-    if (!input.trim() || isLoading) return;
 
-    const userMessage: Message = { role: 'user', content: input };
+  const executeSubmit = async (currentInput: string, currentMode: 'chat' | 'search') => {
+    if (!currentInput.trim()) return;
+
+    const userMessage: Message = { role: 'user', content: currentInput };
     setMessages((prev) => [...prev, userMessage]);
-    const currentInput = input;
     setInput('');
     setShowSlashCommands(false);
     setIsLoading(true);
 
     try {
-      const result = await lhamaAI2Agent({ query: currentInput, mode: searchMode });
+      const result = await lhamaAI2Agent({ query: currentInput, mode: currentMode });
       const assistantMessage: Message = {
         role: 'assistant',
         content: result.response,
@@ -158,27 +159,32 @@ export default function Chat({ agent }: { agent: AIAgent }) {
         title: 'Ocorreu um erro',
         description: 'Falha ao obter resposta da IA. Por favor, tente novamente.',
       });
-       // Se der erro, coloca a mensagem do usuário de volta no input
-       setInput(currentInput);
-       // Remove a mensagem do usuário da lista de mensagens
-       setMessages(prev => prev.slice(0, prev.length -1));
+      // Se der erro, coloca a mensagem do usuário de volta no input
+      setInput(currentInput);
+      // Remove a mensagem do usuário da lista de mensagens
+      setMessages(prev => prev.filter(msg => msg.content !== currentInput));
     } finally {
       setIsLoading(false);
     }
   };
   
+  const handleSubmit = () => {
+    executeSubmit(input, searchMode);
+  };
+
   const handleFormSubmit = (e: FormEvent) => {
     e.preventDefault();
     handleSubmit();
   };
 
   const toggleSearchMode = () => {
-    setSearchMode(prev => (prev === 'search' ? 'chat' : 'search'));
+    const newMode = searchMode === 'search' ? 'chat' : 'search';
+    setSearchMode(newMode);
     toast({
-      title: `Pesquisa da Web ${searchMode === 'search' ? 'Desativada' : 'Ativada'}`,
-      description: searchMode === 'search' 
-        ? 'A IA voltará a responder com seu conhecimento base.'
-        : 'A IA agora usará a web para respostas mais atuais.',
+      title: `Pesquisa da Web ${newMode === 'search' ? 'Ativada' : 'Desativada'}`,
+      description: newMode === 'search' 
+        ? 'A IA agora usará a web para respostas mais atuais.'
+        : 'A IA voltará a responder com seu conhecimento base.',
       duration: 3000,
     });
   }
@@ -216,10 +222,11 @@ export default function Chat({ agent }: { agent: AIAgent }) {
               key={index}
               className={cn(
                 'flex animate-in fade-in-50 slide-in-from-bottom-4 items-start gap-4 duration-500',
-                message.role === 'user' && 'justify-end'
+                message.role === 'user' && 'justify-end',
+                message.isGreeting && 'justify-center text-center'
               )}
             >
-              {message.role === 'assistant' && (
+              {message.role === 'assistant' && !message.isGreeting && (
                 <Avatar className="h-9 w-9 border-2 border-primary/20">
                   <div className="flex h-full w-full items-center justify-center bg-primary/10">
                     <LogoComponent className="h-5 w-5 text-primary" />
@@ -228,13 +235,25 @@ export default function Chat({ agent }: { agent: AIAgent }) {
               )}
               <div
                 className={cn(
-                  'max-w-md rounded-2xl px-4 py-3 text-sm md:text-base lg:max-w-xl',
-                  message.role === 'assistant'
-                    ? 'rounded-tl-none bg-card'
-                    : 'rounded-br-none bg-primary/80 text-primary-foreground',
+                  'max-w-md rounded-2xl text-sm md:text-base lg:max-w-xl',
+                  message.role === 'assistant' && !message.isGreeting
+                    ? 'rounded-tl-none bg-card px-4 py-3'
+                    : '',
+                  message.role === 'user'
+                    ? 'rounded-br-none bg-primary/80 px-4 py-3 text-primary-foreground'
+                    : ''
                 )}
               >
-                {message.role === 'user' ? (
+                {message.isGreeting ? (
+                  <div className="mt-8 flex flex-col items-center">
+                    <h1 className="animate-gradient bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 bg-clip-text text-6xl font-extrabold text-transparent">
+                      {agent.name}
+                    </h1>
+                    <p className="mt-2 text-2xl font-medium text-muted-foreground">
+                      Seu companheiro de IA
+                    </p>
+                  </div>
+                ) : message.role === 'user' ? (
                    <p className="whitespace-pre-wrap">{message.content}</p>
                 ) : (
                   <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-2 first:prose-p:mt-0 last:prose-p:mb-0 prose-ul:my-2 prose-li:my-1 prose-hr:my-4">
@@ -313,7 +332,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
               value={input}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder={`Mensagem para ${agent.name}... (${searchMode === 'search' ? 'Pesquisa da Web ativada' : 'Chat'})`}
+              placeholder={searchMode === 'search' ? "Pesquise o que quiser..." : "Digite algo..."}
               className="max-h-52 flex-1 resize-none border-none bg-transparent p-2 text-base shadow-none focus-visible:ring-0"
               rows={1}
               autoFocus
@@ -352,3 +371,5 @@ export default function Chat({ agent }: { agent: AIAgent }) {
     </div>
   );
 }
+
+    
