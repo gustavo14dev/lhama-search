@@ -5,6 +5,8 @@
  * - lhamaAI2Agent - A function that processes user queries and returns AI-generated responses.
  * - LhamaAI2AgentInput - The input type for the lhamaAI2Agent function.
  * - LhamaAI2AgentOutput - The return type for the lhamaAI2Agent function.
+ * - imageGenerationFlow - A function that takes a text prompt and returns a generated image.
+ * - ImageGenerationOutput - The return type for the imageGenerationFlow function.
  */
 
 import { ai } from '@/ai/genkit';
@@ -14,6 +16,12 @@ import { imageGenerationFlow } from './image-generation-flow';
 
 // Re-export for client-side usage
 export { imageGenerationFlow };
+
+export const ImageGenerationOutputSchema = z.object({
+  imageUrl: z.string().describe('The data URI of the generated image.'),
+});
+export type ImageGenerationOutput = z.infer<typeof ImageGenerationOutputSchema>;
+
 
 // Use a relative path from the project root.
 const trainingFilePath = 'src/ai/training.json';

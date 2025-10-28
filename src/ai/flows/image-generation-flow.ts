@@ -3,16 +3,11 @@
  * @fileOverview A flow for generating images using a text prompt.
  * 
  * - imageGenerationFlow - A function that takes a text prompt and returns a generated image.
- * - ImageGenerationOutput - The return type for the imageGenerationFlow function.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-
-export const ImageGenerationOutputSchema = z.object({
-  imageUrl: z.string().describe('The data URI of the generated image.'),
-});
-export type ImageGenerationOutput = z.infer<typeof ImageGenerationOutputSchema>;
+import type { ImageGenerationOutput } from './lhama-ai-2-agent';
 
 export async function imageGenerationFlow(promptText: string): Promise<ImageGenerationOutput> {
     const { media } = await ai.generate({
@@ -34,7 +29,7 @@ ai.defineFlow(
   {
     name: 'imageGenerationFlow',
     inputSchema: z.string(),
-    outputSchema: ImageGenerationOutputSchema,
+    outputSchema: z.object({ imageUrl: z.string() }),
   },
   async (prompt) => {
     return await imageGenerationFlow(prompt);
