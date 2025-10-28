@@ -4,8 +4,8 @@ import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
-  title: 'Lhama Search',
-  description: 'Uma plataforma de navegador para agentes de IA',
+  title: 'Lhama',
+  description: 'Seu navegador para um universo de IAs',
 };
 
 export default function RootLayout({
