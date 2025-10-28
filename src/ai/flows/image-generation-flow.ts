@@ -11,19 +11,15 @@ import type { ImageGenerationOutput } from '@/ai/types';
 import { ImageGenerationOutputSchema } from '@/ai/types';
 
 export async function imageGenerationFlow(promptText: string): Promise<ImageGenerationOutput> {
-    const {output} = await ai.generate({
-        model: 'googleai/gemini-2.5-flash',
-        prompt: `Based on the following prompt, generate a short, descriptive, URL-friendly slug for an image. For example, if the prompt is "a majestic lion in the savanna at sunset", a good slug would be "majestic-lion-savanna-sunset". Just return the slug and nothing else. Prompt: ${promptText}`,
-    });
-
-    if (!output) {
-      throw new Error('Image generation failed because the AI returned an empty response.');
+    if (!promptText) {
+        throw new Error('Image generation failed because the prompt was empty.');
     }
-
-    const slug = output.text.trim().replace(/\s+/g, '-');
+    
+    // Create a URL-friendly slug directly from the user's prompt.
+    const slug = promptText.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 
     if (!slug) {
-        throw new Error('Image description generation failed.');
+        throw new Error('Could not generate a valid slug from the prompt.');
     }
 
     // Use a placeholder service to generate an image URL based on the slug.
