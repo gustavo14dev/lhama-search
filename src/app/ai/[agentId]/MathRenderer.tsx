@@ -27,10 +27,16 @@ const MathRenderer: React.FC<MathRendererProps> = ({ htmlContent }) => {
           let math = part.replace(/^\$\$|^\\[|\\\]$|^\$\$/g, '');
           math = math.replace(/^\\\(|\\\)$/g, '');
 
-          if (isBlock) {
-            return <BlockMath key={index} math={math} />;
+          try {
+            if (isBlock) {
+              return <BlockMath key={index} math={math} />;
+            }
+            return <InlineMath key={index} math={math} />;
+          } catch (error) {
+            // If KaTeX fails to render, fall back to showing the raw string
+            // This prevents the entire app from crashing due to a malformed equation
+            return <code key={index}>{part}</code>;
           }
-          return <InlineMath key={index} math={math} />;
         }
         
         // Render regular HTML parts safely
