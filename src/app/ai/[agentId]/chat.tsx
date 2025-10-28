@@ -212,7 +212,7 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
     try {
       let assistantMessage: Message;
       if (model === 'lhama2-pro') {
-        const result = await imageGenerationFlow(currentInput);
+        const result: ImageGenerationOutput = await imageGenerationFlow(currentInput);
         assistantMessage = {
           role: 'assistant',
           content: result.imageUrl,
@@ -223,7 +223,7 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
         if (file) {
           imageDataUri = await fileToDataUri(file);
         }
-        const result = await lhamaAI2Agent({ query: currentInput, mode: currentMode, imageDataUri });
+        const result: LhamaAI2AgentOutput = await lhamaAI2Agent({ query: currentInput, mode: currentMode, imageDataUri });
         assistantMessage = {
           role: 'assistant',
           content: result.response,
@@ -232,12 +232,12 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
         };
       }
       setMessages((prev) => [...prev, assistantMessage]);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao chamar o agente de IA:', error);
       toast({
         variant: 'destructive',
         title: 'Ocorreu um erro',
-        description: 'Falha ao obter resposta da IA. Por favor, tente novamente.',
+        description: error.message || 'Falha ao obter resposta da IA. Por favor, tente novamente.',
       });
       // Restore previous state if API call fails
       setMessages(prev => prev.filter(msg => msg !== userMessage));
@@ -569,3 +569,5 @@ export default function ChatPageWrapper({ agent }: { agent: AIAgent }) {
     </Suspense>
   )
 }
+
+    
