@@ -91,10 +91,15 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
 
   useEffect(() => {
     if (initialQuery && !hasStarted) {
-      setSearchMode('search');
-      executeSubmit(initialQuery, 'search');
+      handleInitialQuery(initialQuery);
     }
   }, [initialQuery, hasStarted]);
+
+  const handleInitialQuery = (query: string) => {
+    setHasStarted(true);
+    setMessages((prev) => [...prev.filter(m => !m.isGreeting)]);
+    executeSubmit(query, 'search');
+  };
 
   useEffect(() => {
     if (!hasStarted && messages.length === 0) {
@@ -152,11 +157,15 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
   const executeSubmit = async (currentInput: string, currentMode: 'chat' | 'search') => {
     if (!currentInput.trim() && !attachedFile) return;
 
-    setHasStarted(true);
+    if (!hasStarted) {
+      setHasStarted(true);
+    }
+    setMessages((prev) => [...prev.filter(m => !m.isGreeting)]);
+
     // TODO: Display attached file in the user message
     const userMessage: Message = { role: 'user', content: currentInput };
     
-    setMessages((prev) => [...prev.filter(m => !m.isGreeting), userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setAttachedFile(null);
     setShowSlashCommands(false);
@@ -178,8 +187,10 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
         title: 'Ocorreu um erro',
         description: 'Falha ao obter resposta da IA. Por favor, tente novamente.',
       });
+      // Restore previous state if API call fails
+      setMessages(prev => prev.filter(msg => msg.content !== userMessage.content || msg.role !== 'user'));
       setInput(currentInput);
-      setMessages(prev => prev.filter(msg => msg.content !== currentInput));
+
     } finally {
       setIsLoading(false);
     }
@@ -381,7 +392,7 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
                         toast({ title: 'Anexo removido' });
                       } else {
                         // Open menu or directly the file picker
-                         fileInputref.current?.click();
+                         fileInputRef.current?.click();
                       }
                     }}
                   >
@@ -425,3 +436,5 @@ export default function ChatPageWrapper({ agent }: { agent: AIAgent }) {
     </Suspense>
   )
 }
+
+    
