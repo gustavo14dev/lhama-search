@@ -10,16 +10,20 @@ import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   Send,
   User,
   File,
   Globe,
   Image as ImageIcon,
-  Lightbulb,
-  Telescope,
-  BookOpen,
-  X,
   Plus,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
@@ -45,6 +49,8 @@ const slashCommands = [
     icon: File,
   },
 ];
+
+type ModelType = 'lhama2' | 'lhama2-pro';
 
 const SearchResultCard = ({ result }: { result: SearchResult }) => {
   const siteName = result.pagemap?.metatags?.[0]?.['og:site_name'] || new URL(result.link).hostname.replace('www.', '');
@@ -85,9 +91,10 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
   const [isLoading, setIsLoading] = useState(false);
   const [showSlashCommands, setShowSlashCommands] = useState(false);
   const [searchMode, setSearchMode] = useState<'chat' | 'search'>('chat');
-  const [generationMode, setGenerationMode] = useState<'chat' | 'image'>('chat');
   const [hasStarted, setHasStarted] = useState(false);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [selectedModel, setSelectedModel] = useState<ModelType>('lhama2');
+  
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -228,9 +235,6 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
   const toggleSearchMode = () => {
     const newMode = searchMode === 'search' ? 'chat' : 'search';
     setSearchMode(newMode);
-    if (newMode === 'search') {
-      setGenerationMode('chat'); // Desativa o modo imagem se a pesquisa web for ativada
-    }
     toast({
       title: `Pesquisa da Web ${newMode === 'search' ? 'Ativada' : 'Desativada'}`,
       description: newMode === 'search' 
@@ -239,22 +243,7 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
       duration: 3000,
     });
   }
-
-  const toggleGenerationMode = () => {
-    const newMode = generationMode === 'image' ? 'chat' : 'image';
-    setGenerationMode(newMode);
-     if (newMode === 'image') {
-      setSearchMode('chat'); // Desativa a pesquisa web se o modo imagem for ativado
-    }
-    toast({
-      title: `Geração de Imagem ${newMode === 'image' ? 'Ativada' : 'Desativada'}`,
-      description: newMode === 'image'
-        ? 'Descreva a imagem que você quer criar.'
-        : 'Modo de chat padrão reativado.',
-      duration: 3000,
-    });
-  }
-
+  
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -278,7 +267,7 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
   }, []);
 
   const getPlaceholder = () => {
-    if (generationMode === 'image') return 'Descreva a imagem que você quer criar...';
+    if (selectedModel === 'lhama2-pro') return 'Descreva a imagem que você quer criar...';
     if (searchMode === 'search') return 'Pesquise o que quiser...';
     return 'Digite algo...';
   }
@@ -359,7 +348,7 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
                 )}
               </div>
               {message.role === 'user' && !message.isGreeting && (
-                <Avatar className="h-9 w-9 self-end">
+                 <Avatar className="h-9 w-9 self-end">
                   <AvatarFallback>
                     <User className="h-5 w-5" />
                   </AvatarFallback>
@@ -485,17 +474,27 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
                     <Globe className="mr-2 h-5 w-5" />
                     Pesquisa da Web
                 </Button>
-                 <Button
-                    type="button"
-                    variant={generationMode === 'image' ? "secondary" : "ghost"}
-                    className="h-9 rounded-full px-4 text-muted-foreground"
-                    onClick={toggleGenerationMode}
-                >
-                    <ImageIcon className="mr-2 h-5 w-5" />
-                    Gerar Imagens
-                </Button>
+                 {selectedModel === 'lhama2-pro' && (
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        className="h-9 rounded-full px-4 text-muted-foreground"
+                    >
+                        <ImageIcon className="mr-2 h-5 w-5" />
+                        Gerar Imagens
+                    </Button>
+                 )}
               </div>
               <div className="flex items-center gap-2">
+                 <Select value={selectedModel} onValueChange={(value) => setSelectedModel(value as ModelType)}>
+                    <SelectTrigger className="w-fit gap-2 border-0 bg-muted/50 text-foreground shadow-none">
+                        <SelectValue placeholder="Select Model" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="lhama2">Lhama AI 2</SelectItem>
+                        <SelectItem value="lhama2-pro" disabled>Lhama AI 2 Pro (em breve)</SelectItem>
+                    </SelectContent>
+                </Select>
                 <Button
                   type="submit"
                   size="icon"
@@ -521,5 +520,3 @@ export default function ChatPageWrapper({ agent }: { agent: AIAgent }) {
     </Suspense>
   )
 }
-
-    
