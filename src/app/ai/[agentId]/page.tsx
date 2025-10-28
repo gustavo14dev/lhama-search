@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import ChatPageWrapper from './chat';
 
-export default function AgentPage({ params }: { params: { agentId: string } }) {
+export default async function AgentPage({ params }: { params: { agentId: string } }) {
   const agent = getAgentById(params.agentId);
 
   if (!agent) {
