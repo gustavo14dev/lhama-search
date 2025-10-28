@@ -144,12 +144,9 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
       const file = e.target.files[0];
       setAttachedFile(file);
       setShowSlashCommands(false);
-      // You can add a toast notification here if you want
-      toast({
-        title: 'Arquivo anexado',
-        description: file.name,
-      })
     }
+    // Reset file input to allow selecting the same file again
+    e.target.value = '';
   };
 
   const executeSubmit = async (currentInput: string, currentMode: 'chat' | 'search') => {
@@ -346,6 +343,12 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
             onSubmit={handleFormSubmit}
             className="flex w-full flex-col gap-2 rounded-2xl border bg-card p-2"
           >
+            {attachedFile && (
+                <div className="rounded-lg bg-muted p-3">
+                    <p className="text-sm font-medium">Arquivo anexado</p>
+                    <p className="text-xs text-muted-foreground truncate">{attachedFile.name}</p>
+                </div>
+            )}
             <Textarea
               ref={textareaRef}
               id="campo-pesquisa"
@@ -378,7 +381,7 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
                         toast({ title: 'Anexo removido' });
                       } else {
                         // Open menu or directly the file picker
-                         fileInputRef.current?.click();
+                         fileInputref.current?.click();
                       }
                     }}
                   >
