@@ -190,35 +190,20 @@ const webSearchAgentFlow = ai.defineFlow(
     tools: [customGoogleSearch],
   },
   async (input) => {
-    const llmResponse = await ai.generate({
-      prompt: `Você é a Lhama AI 2, uma assistente de IA. Sua tarefa é responder à pergunta do usuário com base nos resultados de pesquisa fornecidos pela ferramenta 'customGoogleSearch'.
+    // WORKAROUND: Call the tool directly instead of letting the LLM do it.
+    // This avoids the 403 error if the user hasn't enabled the Generative Language API.
+    const searchResults = await customGoogleSearch(input);
 
-Diretrizes:
-1.  **Análise e Síntese:** Use a ferramenta 'customGoogleSearch' para encontrar informações relevantes sobre a pergunta do usuário.
-2.  **Resposta Direta:** Crie uma resposta concisa e direta para a pergunta do usuário, baseada SOMENTE nas informações dos resultados da pesquisa.
-3.  **Formato HTML:** Formate sua resposta em HTML para melhor legibilidade (<p>, <b>, <ul>, <li>, <hr />, etc.).
-4.  **Não Adicione Informações Externas:** Não inclua nenhum conhecimento que você tenha além do que foi fornecido nos resultados da pesquisa.
-5.  **Citação de Fontes:** As fontes já serão exibidas na interface, então você não precisa citá-las na sua resposta de texto.
-
-Pergunta do usuário:
-"${input.query}"
-
-Agora, use a ferramenta de busca para pesquisar e depois gere a resposta em HTML.`,
-      tools: [customGoogleSearch],
-      output: { schema: LhamaAI2AgentOutputSchema },
-    });
-
-    const searchResults = llmResponse.references()
-      .filter((ref) => ref.tool?.name === 'customGoogleSearch')
-      .flatMap((ref) => ref.output as any[]);
-
-    if (llmResponse.output) {
+    if (Array.isArray(searchResults) && searchResults.length > 0) {
       return {
-        ...llmResponse.output,
+        response: `<p>Encontrei algumas coisas na web para você sobre "${input.query}".</p>`,
         searchResults: searchResults,
       };
     }
 
-    return { response: "<p>Desculpe, não consegui encontrar resultados para sua pesquisa. 😥</p>", searchResults: [] };
+    return { 
+      response: `<p>Desculpe, não consegui encontrar resultados para sua pesquisa sobre "${input.query}". 😥</p>`, 
+      searchResults: [] 
+    };
   }
 );
