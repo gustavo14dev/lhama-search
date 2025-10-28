@@ -37,24 +37,8 @@ type SearchResult = NonNullable<LhamaAI2AgentOutput['searchResults']>[number];
 
 const slashCommands = [
   {
-    name: 'Adicionar fotos e arquivos',
+    name: 'Anexar arquivo',
     icon: Paperclip,
-  },
-  {
-    name: 'Criar imagem',
-    icon: ImageIcon,
-  },
-  {
-    name: 'Pensar',
-    icon: Lightbulb,
-  },
-  {
-    name: 'Investigar',
-    icon: Telescope,
-  },
-  {
-    name: 'Estudar e aprender',
-    icon: BookOpen,
   },
 ];
 
@@ -98,10 +82,12 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
   const [showSlashCommands, setShowSlashCommands] = useState(false);
   const [searchMode, setSearchMode] = useState<'chat' | 'search'>('chat');
   const [hasStarted, setHasStarted] = useState(false);
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (initialQuery && !hasStarted) {
@@ -146,25 +132,41 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     setInput(value);
-    if (value.startsWith('/')) {
+    if (value.startsWith('/') && !attachedFile) {
       setShowSlashCommands(true);
     } else {
       setShowSlashCommands(false);
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setAttachedFile(file);
+      setShowSlashCommands(false);
+      // You can add a toast notification here if you want
+      toast({
+        title: 'Arquivo anexado',
+        description: file.name,
+      })
+    }
+  };
+
   const executeSubmit = async (currentInput: string, currentMode: 'chat' | 'search') => {
-    if (!currentInput.trim()) return;
+    if (!currentInput.trim() && !attachedFile) return;
 
     setHasStarted(true);
+    // TODO: Display attached file in the user message
     const userMessage: Message = { role: 'user', content: currentInput };
     
     setMessages((prev) => [...prev.filter(m => !m.isGreeting), userMessage]);
     setInput('');
+    setAttachedFile(null);
     setShowSlashCommands(false);
     setIsLoading(true);
 
     try {
+      // TODO: Handle file in the agent call
       const result = await lhamaAI2Agent({ query: currentInput, mode: currentMode });
       const assistantMessage: Message = {
         role: 'assistant',
@@ -326,9 +328,9 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
                     <button
                       className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left text-sm hover:bg-muted"
                       onClick={() => {
-                        setInput(`/${command.name.toLowerCase()} `);
+                        // This will trigger the hidden file input
+                        fileInputRef.current?.click();
                         setShowSlashCommands(false);
-                        textareaRef.current?.focus();
                       }}
                     >
                       <command.icon className="h-4 w-4" />
@@ -357,10 +359,32 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
             />
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1">
-                <Button type="button" variant="ghost" size="icon" className="h-9 w-9 rounded-full text-muted-foreground" onClick={() => setShowSlashCommands(v => !v)}>
-                  <Plus className="h-5 w-5" />
-                  <span className="sr-only">Anexar</span>
-                </Button>
+                 <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  className="hidden"
+                  // you can specify accepted file types
+                  // accept="image/*,application/pdf" 
+                />
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 rounded-full text-muted-foreground"
+                    onClick={() => {
+                      if (attachedFile) {
+                        setAttachedFile(null);
+                        toast({ title: 'Anexo removido' });
+                      } else {
+                        // Open menu or directly the file picker
+                         fileInputRef.current?.click();
+                      }
+                    }}
+                  >
+                    <Plus className={cn("h-5 w-5 transition-transform", attachedFile && "rotate-45")} />
+                    <span className="sr-only">Anexar</span>
+                  </Button>
                  <Button
                     type="button"
                     variant={searchMode === 'search' ? "secondary" : "outline"}
@@ -377,7 +401,7 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
                   type="submit"
                   size="icon"
                   className="h-9 w-9 rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
-                  disabled={isLoading || !input.trim()}
+                  disabled={isLoading || (!input.trim() && !attachedFile)}
                 >
                   <Send className="h-5 w-5" />
                   <span className="sr-only">Enviar</span>
