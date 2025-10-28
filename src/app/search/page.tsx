@@ -8,9 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search, ArrowLeft } from 'lucide-react';
+import { Search, ArrowLeft, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { SparkleIcon } from '@/components/icons';
+import { cn } from '@/lib/utils';
 
 type SearchResult = NonNullable<LhamaAI2AgentOutput['searchResults']>[number];
 
@@ -78,6 +80,7 @@ function SearchPage() {
   const [query, setQuery] = useState(initialQuery);
   const [searchResult, setSearchResult] = useState<LhamaAI2AgentOutput | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAiResponseExpanded, setIsAiResponseExpanded] = useState(false);
 
   useEffect(() => {
     const performSearch = async () => {
@@ -88,6 +91,7 @@ function SearchPage() {
 
       setIsLoading(true);
       setSearchResult(null);
+      setIsAiResponseExpanded(false);
 
       try {
         const result = await lhamaAI2Agent({ query: initialQuery, mode: 'search' });
@@ -141,10 +145,27 @@ function SearchPage() {
               {searchResult.response && (
                  <Card className="bg-muted/30">
                     <CardContent className="p-6">
+                      <div className="mb-4 flex items-center gap-2">
+                        <SparkleIcon className="h-5 w-5 text-primary" />
+                        <h2 className="font-semibold">Resposta gerada por IA</h2>
+                      </div>
                        <div 
-                         className="prose prose-sm max-w-none dark:prose-invert prose-p:my-2 first:prose-p:mt-0 last:prose-p:mb-0" 
+                         className={cn(
+                           "prose prose-sm max-w-none dark:prose-invert prose-p:my-2 first:prose-p:mt-0 last:prose-p:mb-0",
+                           !isAiResponseExpanded && "line-clamp-3"
+                         )}
                          dangerouslySetInnerHTML={{ __html: searchResult.response }} 
                         />
+                         <div className="mt-4">
+                          <Button 
+                            variant="ghost" 
+                            className="text-primary hover:text-primary/90"
+                            onClick={() => setIsAiResponseExpanded(!isAiResponseExpanded)}
+                          >
+                           {isAiResponseExpanded ? 'Mostrar menos' : 'Mostrar tudo'} 
+                            <ChevronDown className={cn("ml-2 h-4 w-4 transition-transform", isAiResponseExpanded && "rotate-180")} />
+                          </Button>
+                        </div>
                     </CardContent>
                  </Card>
               )}
