@@ -3,8 +3,7 @@
 import { useState, useRef, useEffect, type FormEvent, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { lhamaAI2Agent } from '@/ai/flows/lhama-ai-2-agent';
-import { imageGenerationFlow } from '@/ai/flows/image-generation-flow';
-import type { LhamaAI2AgentOutput, ImageGenerationOutput } from '@/ai/types';
+import type { LhamaAI2AgentOutput } from '@/ai/types';
 import type { AIAgent } from '@/lib/agents';
 import { agentLogos } from '@/lib/agents';
 import { Button } from '@/components/ui/button';
@@ -12,18 +11,10 @@ import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
   Send,
   User,
   File,
   Globe,
-  Image as ImageIcon,
   Plus,
   X,
 } from 'lucide-react';
@@ -54,8 +45,6 @@ const slashCommands = [
     icon: File,
   },
 ];
-
-type ModelType = 'lhama2' | 'lhama2-pro';
 
 const SearchResultCard = ({ result }: { result: SearchResult }) => {
   const siteName = result.pagemap?.metatags?.[0]?.['og:site_name'] || new URL(result.link).hostname.replace('www.', '');
@@ -98,7 +87,6 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
   const [searchMode, setSearchMode] = useState<'chat' | 'search'>('chat');
   const [hasStarted, setHasStarted] = useState(false);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
-  const [selectedModel, setSelectedModel] = useState<ModelType>('lhama2');
   
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -115,7 +103,7 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
   const handleInitialQuery = (query: string) => {
     setHasStarted(true);
     setMessages((prev) => [...prev.filter(m => !m.isGreeting)]);
-    executeSubmit(query, 'search', null, 'lhama2');
+    executeSubmit(query, 'search', null);
   };
 
   useEffect(() => {
@@ -164,19 +152,17 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      // Allow only images for Lhama AI 2, but other files for Lhama AI 2 Pro image generation
-      if (selectedModel === 'lhama2' && !file.type.startsWith('image/')) {
+      if (!file.type.startsWith('image/')) {
         toast({
             variant: 'destructive',
             title: 'Arquivo inválido',
-            description: 'Apenas imagens são permitidas para análise com Lhama AI 2.',
+            description: 'Apenas imagens são permitidas para análise.',
         });
         return;
       }
       setAttachedFile(file);
       setShowSlashCommands(false);
     }
-    // Reset file input to allow selecting the same file again
     e.target.value = '';
   };
   
@@ -189,7 +175,7 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
     });
   };
 
-  const executeSubmit = async (currentInput: string, currentMode: 'chat' | 'search', file: File | null, model: ModelType) => {
+  const executeSubmit = async (currentInput: string, currentMode: 'chat' | 'search', file: File | null) => {
     if (!currentInput.trim() && !file) return;
   
     if (!hasStarted) {
@@ -210,27 +196,17 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
     setIsLoading(true);
   
     try {
-      let assistantMessage: Message;
-      if (model === 'lhama2-pro') {
-        const result: ImageGenerationOutput = await imageGenerationFlow(currentInput);
-        assistantMessage = {
-          role: 'assistant',
-          content: result.imageUrl,
-          isImage: true,
-        };
-      } else {
         let imageDataUri: string | undefined = undefined;
         if (file) {
           imageDataUri = await fileToDataUri(file);
         }
         const result: LhamaAI2AgentOutput = await lhamaAI2Agent({ query: currentInput, mode: currentMode, imageDataUri });
-        assistantMessage = {
+        const assistantMessage: Message = {
           role: 'assistant',
           content: result.response,
           isImage: result.isImage,
           searchResults: result.searchResults,
         };
-      }
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error: any) {
       console.error('Erro ao chamar o agente de IA:', error);
@@ -239,7 +215,6 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
         title: 'Ocorreu um erro',
         description: error.message || 'Falha ao obter resposta da IA. Por favor, tente novamente.',
       });
-      // Restore previous state if API call fails
       setMessages(prev => prev.filter(msg => msg !== userMessage));
       setInput(currentInput);
   
@@ -249,9 +224,7 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
   };
   
   const handleSubmit = () => {
-    // If Lhama Pro is selected, force searchMode to chat, as it doesn't use web search
-    const currentMode = selectedModel === 'lhama2-pro' ? 'chat' : searchMode;
-    executeSubmit(input, currentMode, attachedFile, selectedModel);
+    executeSubmit(input, searchMode, attachedFile);
   };
 
   const handleFormSubmit = (e: FormEvent) => {
@@ -260,14 +233,6 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
   };
 
   const toggleSearchMode = () => {
-    if (selectedModel === 'lhama2-pro') {
-        toast({
-            title: 'Modo de Geração de Imagem',
-            description: 'O Lhama AI 2 Pro já está no modo de geração de imagem.',
-            duration: 3000,
-        });
-        return;
-    }
     const newMode = searchMode === 'search' ? 'chat' : 'search';
     setSearchMode(newMode);
     toast({
@@ -302,7 +267,6 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
   }, []);
 
   const getPlaceholder = () => {
-    if (selectedModel === 'lhama2-pro') return 'Descreva a imagem que você quer criar...';
     if (searchMode === 'search') return 'Pesquise o que quiser...';
     return 'Digite algo...';
   }
@@ -332,7 +296,6 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
               <div
                 className={cn(
                   'max-w-md rounded-2xl text-sm md:text-base lg:max-w-xl',
-                   // The following classes are for the main content bubble
                   message.role === 'assistant' && !message.isGreeting
                     ? 'rounded-tl-none bg-card px-4 py-3'
                     : '',
@@ -374,7 +337,7 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
                         width={512}
                         height={512}
                         className="rounded-lg"
-                        unoptimized // placeholder services can be slow
+                        unoptimized
                     />
                 ) : (
                   <div>
@@ -429,7 +392,6 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
                     <button
                       className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left text-sm hover:bg-muted"
                       onClick={() => {
-                        // This will trigger the hidden file input
                         fileInputRef.current?.click();
                         setShowSlashCommands(false);
                       }}
@@ -488,7 +450,6 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
                   ref={fileInputRef}
                   onChange={handleFileChange}
                   className="hidden"
-                  // you can specify accepted file types
                   accept="image/*" 
                 />
                  <label htmlFor="file-upload">
@@ -504,7 +465,6 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
                             fileInputRef.current?.click();
                           }
                         }}
-                        disabled={selectedModel === 'lhama2-pro'}
                     >
                       <Plus className={cn("h-5 w-5 transition-transform", attachedFile && "rotate-45")} />
                       <span className="sr-only">Anexar</span>
@@ -518,32 +478,12 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
                       searchMode === 'search' && "bg-muted/80 text-foreground hover:bg-muted"
                     )}
                     onClick={toggleSearchMode}
-                    disabled={selectedModel === 'lhama2-pro'}
                 >
                     <Globe className="mr-2 h-5 w-5" />
                     Pesquisa da Web
                 </Button>
-                 {selectedModel === 'lhama2-pro' && (
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        className="h-9 rounded-full px-4 bg-muted/80 text-foreground hover:bg-muted"
-                    >
-                        <ImageIcon className="mr-2 h-5 w-5" />
-                        Gerar Imagens
-                    </Button>
-                 )}
               </div>
               <div className="flex items-center gap-2">
-                 <Select value={selectedModel} onValueChange={(value) => setSelectedModel(value as ModelType)}>
-                    <SelectTrigger className="w-fit gap-2 border-0 bg-muted/50 text-foreground shadow-none">
-                        <SelectValue placeholder="Select Model" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="lhama2">Lhama AI 2</SelectItem>
-                        <SelectItem value="lhama2-pro">Lhama AI 2 Pro</SelectItem>
-                    </SelectContent>
-                </Select>
                 <Button
                   type="submit"
                   size="icon"
@@ -569,5 +509,3 @@ export default function ChatPageWrapper({ agent }: { agent: AIAgent }) {
     </Suspense>
   )
 }
-
-    
