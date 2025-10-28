@@ -85,6 +85,7 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
   const [isLoading, setIsLoading] = useState(false);
   const [showSlashCommands, setShowSlashCommands] = useState(false);
   const [searchMode, setSearchMode] = useState<'chat' | 'search'>('chat');
+  const [generationMode, setGenerationMode] = useState<'chat' | 'image'>('chat');
   const [hasStarted, setHasStarted] = useState(false);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const { toast } = useToast();
@@ -227,11 +228,29 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
   const toggleSearchMode = () => {
     const newMode = searchMode === 'search' ? 'chat' : 'search';
     setSearchMode(newMode);
+    if (newMode === 'search') {
+      setGenerationMode('chat'); // Desativa o modo imagem se a pesquisa web for ativada
+    }
     toast({
       title: `Pesquisa da Web ${newMode === 'search' ? 'Ativada' : 'Desativada'}`,
       description: newMode === 'search' 
         ? 'A IA agora usará a web para respostas mais atuais.'
         : 'A IA voltará a responder com seu conhecimento base.',
+      duration: 3000,
+    });
+  }
+
+  const toggleGenerationMode = () => {
+    const newMode = generationMode === 'image' ? 'chat' : 'image';
+    setGenerationMode(newMode);
+     if (newMode === 'image') {
+      setSearchMode('chat'); // Desativa a pesquisa web se o modo imagem for ativado
+    }
+    toast({
+      title: `Geração de Imagem ${newMode === 'image' ? 'Ativada' : 'Desativada'}`,
+      description: newMode === 'image'
+        ? 'Descreva a imagem que você quer criar.'
+        : 'Modo de chat padrão reativado.',
       duration: 3000,
     });
   }
@@ -258,6 +277,12 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
     };
   }, []);
 
+  const getPlaceholder = () => {
+    if (generationMode === 'image') return 'Descreva a imagem que você quer criar...';
+    if (searchMode === 'search') return 'Pesquise o que quiser...';
+    return 'Digite algo...';
+  }
+
   const LogoComponent = agentLogos[agent.logo];
 
   return (
@@ -269,21 +294,20 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
               key={index}
               className={cn(
                 'flex animate-in fade-in-50 slide-in-from-bottom-4 items-start gap-4 duration-500',
-                message.role === 'user' && 'flex-row-reverse',
+                message.role === 'user' ? 'justify-end' : 'justify-start',
                 message.isGreeting && 'justify-center text-center'
               )}
             >
-              {message.role === 'assistant' && !message.isGreeting && (
-                <Avatar className="h-9 w-9 border-2 border-primary/20">
-                  <div className="flex h-full w-full items-center justify-center bg-primary/10">
-                    <LogoComponent className="h-5 w-5 text-primary" />
-                  </div>
-                </Avatar>
-              )}
+               {message.role === 'assistant' && !message.isGreeting && (
+                 <Avatar className="h-9 w-9 border-2 border-primary/20">
+                   <div className="flex h-full w-full items-center justify-center bg-primary/10">
+                     <LogoComponent className="h-5 w-5 text-primary" />
+                   </div>
+                 </Avatar>
+               )}
               <div
                 className={cn(
                   'max-w-md rounded-2xl text-sm md:text-base lg:max-w-xl',
-                   message.role === 'user' ? 'self-end' : '',
                    // The following classes are for the main content bubble
                   message.role === 'assistant' && !message.isGreeting
                     ? 'rounded-tl-none bg-card px-4 py-3'
@@ -314,7 +338,7 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
                       </div>
                     )}
                     {message.content && (
-                      <div className="w-fit rounded-2xl rounded-br-none bg-primary/80 px-4 py-3 text-primary-foreground">
+                      <div className="w-fit self-end rounded-2xl rounded-br-none bg-primary/80 px-4 py-3 text-primary-foreground">
                           <p className="whitespace-pre-wrap">{message.content}</p>
                       </div>
                     )}
@@ -335,7 +359,6 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
                 )}
               </div>
               {message.role === 'user' && !message.isGreeting && (
-                 // The avatar is now a sibling and aligned by the flex container
                 <Avatar className="h-9 w-9 self-end">
                   <AvatarFallback>
                     <User className="h-5 w-5" />
@@ -420,7 +443,7 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
               value={input}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder={searchMode === 'search' ? "Pesquise o que quiser..." : "Digite algo..."}
+              placeholder={getPlaceholder()}
               className="max-h-52 flex-1 resize-none border-none bg-transparent p-2 text-base shadow-none focus-visible:ring-0"
               rows={1}
               autoFocus
@@ -455,13 +478,21 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
                  </label>
                  <Button
                     type="button"
-                    variant={searchMode === 'search' ? "secondary" : "outline"}
-                    className="h-9 rounded-full px-4"
+                    variant={searchMode === 'search' ? "secondary" : "ghost"}
+                    className="h-9 rounded-full px-4 text-muted-foreground"
                     onClick={toggleSearchMode}
                 >
                     <Globe className="mr-2 h-5 w-5" />
                     Pesquisa da Web
-                    {searchMode === 'search' && <X className="ml-2 h-4 w-4" />}
+                </Button>
+                 <Button
+                    type="button"
+                    variant={generationMode === 'image' ? "secondary" : "ghost"}
+                    className="h-9 rounded-full px-4 text-muted-foreground"
+                    onClick={toggleGenerationMode}
+                >
+                    <ImageIcon className="mr-2 h-5 w-5" />
+                    Gerar Imagens
                 </Button>
               </div>
               <div className="flex items-center gap-2">
@@ -490,3 +521,5 @@ export default function ChatPageWrapper({ agent }: { agent: AIAgent }) {
     </Suspense>
   )
 }
+
+    
