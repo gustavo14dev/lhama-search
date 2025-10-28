@@ -35,10 +35,13 @@ async function readTrainingData(): Promise<TrainingData> {
 }
 
 async function writeTrainingData(data: TrainingData): Promise<void> {
-  try {
-    await fs.writeFile(trainingFilePath, JSON.stringify(data, null, 2), 'utf-8');
-  } catch (error) {
-    console.error('Error writing training data:', error);
+  // Apenas escreva no arquivo em ambiente de desenvolvimento
+  if (process.env.NODE_ENV !== 'production') {
+    try {
+      await fs.writeFile(trainingFilePath, JSON.stringify(data, null, 2), 'utf-8');
+    } catch (error) {
+      console.error('Error writing training data:', error);
+    }
   }
 }
 
