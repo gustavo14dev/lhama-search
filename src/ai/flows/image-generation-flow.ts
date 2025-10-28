@@ -16,7 +16,7 @@ export async function imageGenerationFlow(promptText: string): Promise<ImageGene
         prompt: `Based on the following prompt, generate a short, descriptive, URL-friendly slug for an image. For example, if the prompt is "a majestic lion in the savanna at sunset", a good slug would be "majestic-lion-savanna-sunset". Just return the slug and nothing else. Prompt: ${promptText}`,
     });
 
-    const slug = output?.toString().trim().replace(/\s+/g, '-');
+    const slug = output.text.trim().replace(/\s+/g, '-');
 
     if (!slug) {
         throw new Error('Image description generation failed.');
