@@ -8,13 +8,14 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search, ArrowLeft, ChevronDown } from 'lucide-react';
+import { Search, ArrowLeft, ChevronDown, Image as ImageIcon, LayoutList } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { SparkleIcon } from '@/components/icons';
 import { cn } from '@/lib/utils';
 
 type SearchResult = NonNullable<LhamaAI2AgentOutput['searchResults']>[number];
+type SearchTab = 'all' | 'images';
 
 const SearchResultCard = ({ result }: { result: SearchResult }) => {
   const siteName = result.pagemap?.metatags?.[0]?.['og:site_name'] || new URL(result.link).hostname.replace('www.', '');
@@ -45,6 +46,27 @@ const SearchResultCard = ({ result }: { result: SearchResult }) => {
     </Card>
   );
 };
+
+const ImageResultCard = ({ result }: { result: SearchResult }) => {
+  const thumbnail = result.pagemap?.cse_thumbnail?.[0]?.src;
+  if (!thumbnail) return null;
+
+  return (
+    <a href={result.link} target="_blank" rel="noopener noreferrer" className="group relative block overflow-hidden rounded-lg">
+      <Image
+        src={thumbnail}
+        alt={result.title}
+        width={300}
+        height={300}
+        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+      />
+       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      <div className="absolute bottom-0 left-0 p-2">
+        <p className="text-xs font-medium text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100">{result.title}</p>
+      </div>
+    </a>
+  )
+}
 
 const LoadingSkeleton = () => (
   <div className="space-y-6">
@@ -81,7 +103,8 @@ function SearchPage() {
   const [searchResult, setSearchResult] = useState<LhamaAI2AgentOutput | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAiResponseExpanded, setIsAiResponseExpanded] = useState(false);
-
+  const [activeTab, setActiveTab] = useState<SearchTab>('all');
+  
   useEffect(() => {
     const performSearch = async () => {
       if (!initialQuery) {
@@ -98,7 +121,6 @@ function SearchPage() {
         setSearchResult(result);
       } catch (error) {
         console.error("Search failed:", error);
-        // Handle error state in UI
       } finally {
         setIsLoading(false);
       }
@@ -113,6 +135,8 @@ function SearchPage() {
       router.push(`/search?q=${encodeURIComponent(query)}`);
     }
   };
+
+  const imageResults = searchResult?.searchResults?.filter(result => result.pagemap?.cse_thumbnail?.[0]?.src) || [];
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -134,13 +158,23 @@ function SearchPage() {
             />
           </form>
         </div>
+         <div className="mx-auto mt-4 flex w-full max-w-4xl items-center gap-2">
+            <Button variant={activeTab === 'all' ? 'secondary' : 'ghost'} size="sm" onClick={() => setActiveTab('all')}>
+                <LayoutList className="mr-2 h-4 w-4" />
+                Todas
+            </Button>
+             <Button variant={activeTab === 'images' ? 'secondary' : 'ghost'} size="sm" onClick={() => setActiveTab('images')} disabled={imageResults.length === 0}>
+                <ImageIcon className="mr-2 h-4 w-4" />
+                Imagens
+            </Button>
+        </div>
       </header>
 
       <main className="flex-1 p-4 sm:p-6">
         <div className="mx-auto max-w-4xl">
           {isLoading && <LoadingSkeleton />}
           
-          {!isLoading && searchResult && (
+          {!isLoading && searchResult && activeTab === 'all' && (
             <div className="space-y-8">
               {searchResult.response && (
                  <Card className="bg-muted/30">
@@ -183,6 +217,19 @@ function SearchPage() {
             )}
             </div>
           )}
+           {!isLoading && activeTab === 'images' && (
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                  {imageResults.map((result, i) => (
+                      <ImageResultCard key={i} result={result} />
+                  ))}
+                   {imageResults.length === 0 && (
+                     <div className="col-span-full py-12 text-center text-muted-foreground">
+                        <p>Nenhuma imagem encontrada para "{initialQuery}"</p>
+                    </div>
+                  )}
+              </div>
+            )}
+
            {!isLoading && !initialQuery && (
               <div className="py-12 text-center text-muted-foreground">
                   <p>Comece uma nova pesquisa para ver os resultados.</p>
