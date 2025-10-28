@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Send,
   User,
-  Paperclip,
+  File,
   Globe,
   Image as ImageIcon,
   Lightbulb,
@@ -31,6 +31,10 @@ interface Message {
   content: string;
   isGreeting?: boolean;
   searchResults?: LhamaAI2AgentOutput['searchResults'];
+  attachment?: {
+    name: string;
+    type: string;
+  };
 }
 
 type SearchResult = NonNullable<LhamaAI2AgentOutput['searchResults']>[number];
@@ -38,7 +42,7 @@ type SearchResult = NonNullable<LhamaAI2AgentOutput['searchResults']>[number];
 const slashCommands = [
   {
     name: 'Anexar arquivo',
-    icon: Paperclip,
+    icon: File,
   },
 ];
 
@@ -161,9 +165,12 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
       setHasStarted(true);
     }
     setMessages((prev) => [...prev.filter(m => !m.isGreeting)]);
-
-    // TODO: Display attached file in the user message
-    const userMessage: Message = { role: 'user', content: currentInput };
+    
+    const userMessage: Message = { 
+      role: 'user', 
+      content: currentInput,
+      attachment: attachedFile ? { name: attachedFile.name, type: attachedFile.type } : undefined,
+    };
     
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
@@ -188,7 +195,7 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
         description: 'Falha ao obter resposta da IA. Por favor, tente novamente.',
       });
       // Restore previous state if API call fails
-      setMessages(prev => prev.filter(msg => msg.content !== userMessage.content || msg.role !== 'user'));
+      setMessages(prev => prev.filter(msg => msg !== userMessage));
       setInput(currentInput);
 
     } finally {
@@ -250,7 +257,7 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
               key={index}
               className={cn(
                 'flex animate-in fade-in-50 slide-in-from-bottom-4 items-start gap-4 duration-500',
-                message.role === 'user' && 'justify-end',
+                message.role === 'user' && 'flex-col items-end', // Changed for user messages
                 message.isGreeting && 'justify-center text-center'
               )}
             >
@@ -264,12 +271,12 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
               <div
                 className={cn(
                   'max-w-md rounded-2xl text-sm md:text-base lg:max-w-xl',
+                   message.role === 'user' ? 'self-end' : '',
+                   // The following classes are for the main content bubble
                   message.role === 'assistant' && !message.isGreeting
                     ? 'rounded-tl-none bg-card px-4 py-3'
                     : '',
-                  message.role === 'user'
-                    ? 'rounded-br-none bg-primary/80 px-4 py-3 text-primary-foreground'
-                    : ''
+                   message.isGreeting ? '' : 'w-full'
                 )}
               >
                 {message.isGreeting ? (
@@ -282,7 +289,24 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
                     </p>
                   </div>
                 ) : message.role === 'user' ? (
-                   <p className="whitespace-pre-wrap">{message.content}</p>
+                  <div className="flex flex-col items-end gap-2">
+                    {message.attachment && (
+                      <div className="w-fit max-w-xs rounded-2xl rounded-br-none bg-primary/80 px-4 py-3 text-primary-foreground">
+                          <div className="flex items-center gap-3">
+                              <File className="h-6 w-6 flex-shrink-0" />
+                              <div className="truncate">
+                                  <p className="truncate font-medium">{message.attachment.name}</p>
+                                  <p className="text-xs text-primary-foreground/80">{message.attachment.type.split('/')[1]?.toUpperCase() || 'Arquivo'}</p>
+                              </div>
+                          </div>
+                      </div>
+                    )}
+                    {message.content && (
+                      <div className="w-fit rounded-2xl rounded-br-none bg-primary/80 px-4 py-3 text-primary-foreground">
+                          <p className="whitespace-pre-wrap">{message.content}</p>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-2 first:prose-p:mt-0 last:prose-p:mb-0 prose-ul:my-2 prose-li:my-1 prose-hr:my-4">
                     <div dangerouslySetInnerHTML={{ __html: message.content }} />
@@ -298,8 +322,9 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
                   </div>
                 )}
               </div>
-              {message.role === 'user' && (
-                <Avatar className="h-9 w-9">
+              {message.role === 'user' && !message.isGreeting && (
+                 // The avatar is now a sibling and aligned by the flex container
+                <Avatar className="h-9 w-9 self-end">
                   <AvatarFallback>
                     <User className="h-5 w-5" />
                   </AvatarFallback>
@@ -355,9 +380,26 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
             className="flex w-full flex-col gap-2 rounded-2xl border bg-card p-2"
           >
             {attachedFile && (
-                <div className="rounded-lg bg-muted p-3">
-                    <p className="text-sm font-medium">Arquivo anexado</p>
-                    <p className="text-xs text-muted-foreground truncate">{attachedFile.name}</p>
+                <div className="rounded-lg bg-muted/50 p-3">
+                   <div className="flex items-center justify-between">
+                     <div className="flex items-center gap-3">
+                        <File className="h-5 w-5 text-muted-foreground" />
+                        <div className="truncate">
+                           <p className="truncate text-sm font-medium">{attachedFile.name}</p>
+                           <p className="text-xs text-muted-foreground">{attachedFile.type}</p>
+                        </div>
+                     </div>
+                     <Button 
+                       type="button" 
+                       variant="ghost" 
+                       size="icon" 
+                       className="h-7 w-7 flex-shrink-0"
+                       onClick={() => setAttachedFile(null)}
+                      >
+                       <X className="h-4 w-4" />
+                       <span className="sr-only">Remover anexo</span>
+                     </Button>
+                   </div>
                 </div>
             )}
             <Textarea
@@ -381,24 +423,25 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
                   // you can specify accepted file types
                   // accept="image/*,application/pdf" 
                 />
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9 rounded-full text-muted-foreground"
-                    onClick={() => {
-                      if (attachedFile) {
-                        setAttachedFile(null);
-                        toast({ title: 'Anexo removido' });
-                      } else {
-                        // Open menu or directly the file picker
-                         fileInputRef.current?.click();
-                      }
-                    }}
-                  >
-                    <Plus className={cn("h-5 w-5 transition-transform", attachedFile && "rotate-45")} />
-                    <span className="sr-only">Anexar</span>
-                  </Button>
+                 <label htmlFor="file-upload">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 rounded-full text-muted-foreground"
+                        onClick={() => {
+                          if (attachedFile) {
+                            setAttachedFile(null);
+                            toast({ title: 'Anexo removido' });
+                          } else {
+                            fileInputRef.current?.click();
+                          }
+                        }}
+                    >
+                      <Plus className={cn("h-5 w-5 transition-transform", attachedFile && "rotate-45")} />
+                      <span className="sr-only">Anexar</span>
+                    </Button>
+                 </label>
                  <Button
                     type="button"
                     variant={searchMode === 'search' ? "secondary" : "outline"}
