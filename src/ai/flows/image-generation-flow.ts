@@ -7,7 +7,8 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import type { ImageGenerationOutput } from './lhama-ai-2-agent';
+import type { ImageGenerationOutput } from '@/ai/types';
+import { ImageGenerationOutputSchema } from '@/ai/types';
 
 export async function imageGenerationFlow(promptText: string): Promise<ImageGenerationOutput> {
     const { media } = await ai.generate({
@@ -29,7 +30,7 @@ ai.defineFlow(
   {
     name: 'imageGenerationFlow',
     inputSchema: z.string(),
-    outputSchema: z.object({ imageUrl: z.string() }),
+    outputSchema: ImageGenerationOutputSchema,
   },
   async (prompt) => {
     return await imageGenerationFlow(prompt);

@@ -2,7 +2,9 @@
 
 import { useState, useRef, useEffect, type FormEvent, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { lhamaAI2Agent, imageGenerationFlow, type LhamaAI2AgentOutput, type ImageGenerationOutput } from '@/ai/flows/lhama-ai-2-agent';
+import { lhamaAI2Agent } from '@/ai/flows/lhama-ai-2-agent';
+import { imageGenerationFlow } from '@/ai/flows/image-generation-flow';
+import type { LhamaAI2AgentOutput, ImageGenerationOutput } from '@/ai/types';
 import type { AIAgent } from '@/lib/agents';
 import { agentLogos } from '@/lib/agents';
 import { Button } from '@/components/ui/button';
