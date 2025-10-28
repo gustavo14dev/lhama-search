@@ -97,7 +97,7 @@ export default {
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
-        gradient: 'gradient 6s ease infinite',
+        gradient: 'gradient 2s ease infinite',
       },
        backgroundSize: {
         '300%': '300%',
@@ -106,5 +106,3 @@ export default {
   },
   plugins: [require('tailwindcss-animate'), require('@tailwindcss/typography')],
 } satisfies Config;
-
-    

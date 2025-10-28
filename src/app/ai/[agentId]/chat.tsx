@@ -246,7 +246,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
               >
                 {message.isGreeting ? (
                   <div className="mt-8 flex flex-col items-center">
-                    <h1 className="animate-gradient bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 bg-clip-text text-6xl font-extrabold text-transparent">
+                    <h1 className="animate-gradient bg-300% bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 bg-clip-text text-6xl font-extrabold text-transparent">
                       {agent.name}
                     </h1>
                     <p className="mt-2 text-2xl font-medium text-muted-foreground">
@@ -371,5 +371,3 @@ export default function Chat({ agent }: { agent: AIAgent }) {
     </div>
   );
 }
-
-    
