@@ -190,20 +190,35 @@ const webSearchAgentFlow = ai.defineFlow(
     tools: [customGoogleSearch],
   },
   async (input) => {
-    // WORKAROUND: Call the tool directly instead of letting the LLM do it.
-    // This avoids the 403 error if the user hasn't enabled the Generative Language API.
     const searchResults = await customGoogleSearch(input);
 
-    if (Array.isArray(searchResults) && searchResults.length > 0) {
-      return {
-        response: `<p>Encontrei algumas coisas na web para você sobre "${input.query}".</p>`,
-        searchResults: searchResults,
+    if (!Array.isArray(searchResults) || searchResults.length === 0) {
+      return { 
+        response: `<p>Desculpe, não consegui encontrar resultados para sua pesquisa sobre "${input.query}". 😥</p>`, 
+        searchResults: [] 
       };
     }
 
-    return { 
-      response: `<p>Desculpe, não consegui encontrar resultados para sua pesquisa sobre "${input.query}". 😥</p>`, 
-      searchResults: [] 
+    // Agora que a API está habilitada, usamos a IA para gerar uma resposta.
+    const llmResponse = await ai.generate({
+      prompt: `Você é a Lhama AI 2, uma assistente de IA. Sua tarefa é responder à pergunta do usuário com base nos resultados de pesquisa fornecidos.
+Diretrizes:
+- Formate a resposta em HTML.
+- Sintetize as informações dos resultados da pesquisa para criar uma resposta coesa e direta.
+- Não aja como um motor de busca. Aja como uma assistente que encontrou as informações.
+- Comece de forma amigável, como "Com base no que encontrei para você...".
+- Use <b>, <p>, <ul>, <li> quando apropriado.
+
+Pergunta do Usuário: "${input.query}"
+
+Resultados da Pesquisa:
+${JSON.stringify(searchResults, null, 2)}
+`,
+    });
+
+    return {
+      response: llmResponse.text,
+      searchResults: searchResults,
     };
   }
 );
