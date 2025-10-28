@@ -36,7 +36,7 @@ export default function Home() {
         <div className="mx-auto max-w-3xl">
           <div className="flex flex-col items-center justify-center pt-16 text-center md:pt-24">
             <h1 className="font-headline text-5xl font-bold tracking-tight sm:text-6xl md:text-7xl">
-              Lhama
+              Lhama Search
             </h1>
             <p className="mt-2 max-w-md text-muted-foreground">
               Seu navegador pessoal para uma nova geração de agentes de IA.
