@@ -11,16 +11,20 @@ import type { ImageGenerationOutput } from '@/ai/types';
 import { ImageGenerationOutputSchema } from '@/ai/types';
 
 export async function imageGenerationFlow(promptText: string): Promise<ImageGenerationOutput> {
-    const { media } = await ai.generate({
-        model: 'googleai/imagen-4.0-fast-generate-001',
-        prompt: promptText,
+    const { output } = await ai.generate({
+        model: 'googleai/gemini-pro-vision',
+        prompt: `Generate a photorealistic image of the following: ${promptText}`,
     });
 
-    const imageUrl = media.url;
+    const imageUrl = output?.toString();
+
     if (!imageUrl) {
         throw new Error('Image generation failed to return a URL.');
     }
 
+    // Assuming the model returns a data URI or a URL, which needs to be handled.
+    // For now, let's assume it returns a string that can be used as a src.
+    // This might need adjustment based on the actual model output format.
     return { imageUrl };
 }
 
