@@ -19,6 +19,7 @@ import {
   Telescope,
   BookOpen,
   X,
+  Plus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
@@ -356,8 +357,8 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
             />
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1">
-                <Button type="button" variant="ghost" size="icon" className="h-9 w-9 rounded-full text-muted-foreground">
-                  <Paperclip className="h-5 w-5" />
+                <Button type="button" variant="ghost" size="icon" className="h-9 w-9 rounded-full text-muted-foreground" onClick={() => setShowSlashCommands(v => !v)}>
+                  <Plus className="h-5 w-5" />
                   <span className="sr-only">Anexar</span>
                 </Button>
                  <Button
