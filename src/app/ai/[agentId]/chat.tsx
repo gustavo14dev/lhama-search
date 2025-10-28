@@ -173,8 +173,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
   };
   
   const pesquisarNaWeb = () => {
-    if (!input.trim()) return;
-    window.open(`https://www.google.com/search?q=${encodeURIComponent(input)}`, "_blank");
+    handleSubmit('search');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -318,13 +317,14 @@ export default function Chat({ agent }: { agent: AIAgent }) {
                   <Paperclip className="h-5 w-5" />
                   <span className="sr-only">Anexar</span>
                 </Button>
-                 <Button
+                <Button
                     type="button"
                     variant="outline"
                     className="h-9 rounded-full px-4"
-                    onClick={() => {}}
+                    onClick={pesquisarNaWeb}
+                    disabled={isLoading || !input.trim()}
                 >
-                    <Globe className="h-5 w-5 mr-2" />
+                    <Globe className="mr-2 h-5 w-5" />
                     Pesquisa da Web
                 </Button>
               </div>
