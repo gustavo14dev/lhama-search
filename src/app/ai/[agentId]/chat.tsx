@@ -373,6 +373,7 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
                         width={512}
                         height={512}
                         className="rounded-lg"
+                        unoptimized // placeholder services can be slow
                     />
                 ) : (
                   <div>
