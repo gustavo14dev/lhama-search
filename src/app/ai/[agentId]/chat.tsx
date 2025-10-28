@@ -157,9 +157,18 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
     // Reset file input to allow selecting the same file again
     e.target.value = '';
   };
+  
+  const fileToDataUri = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
 
-  const executeSubmit = async (currentInput: string, currentMode: 'chat' | 'search') => {
-    if (!currentInput.trim() && !attachedFile) return;
+  const executeSubmit = async (currentInput: string, currentMode: 'chat' | 'search', file?: File | null) => {
+    if (!currentInput.trim() && !file) return;
 
     if (!hasStarted) {
       setHasStarted(true);
@@ -169,7 +178,7 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
     const userMessage: Message = { 
       role: 'user', 
       content: currentInput,
-      attachment: attachedFile ? { name: attachedFile.name, type: attachedFile.type } : undefined,
+      attachment: file ? { name: file.name, type: file.type } : undefined,
     };
     
     setMessages((prev) => [...prev, userMessage]);
@@ -179,8 +188,11 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
     setIsLoading(true);
 
     try {
-      // TODO: Handle file in the agent call
-      const result = await lhamaAI2Agent({ query: currentInput, mode: currentMode });
+      let imageDataUri: string | undefined = undefined;
+      if (file) {
+        imageDataUri = await fileToDataUri(file);
+      }
+      const result = await lhamaAI2Agent({ query: currentInput, mode: currentMode, imageDataUri });
       const assistantMessage: Message = {
         role: 'assistant',
         content: result.response,
@@ -204,7 +216,7 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
   };
   
   const handleSubmit = () => {
-    executeSubmit(input, searchMode);
+    executeSubmit(input, searchMode, attachedFile);
   };
 
   const handleFormSubmit = (e: FormEvent) => {
@@ -257,7 +269,7 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
               key={index}
               className={cn(
                 'flex animate-in fade-in-50 slide-in-from-bottom-4 items-start gap-4 duration-500',
-                message.role === 'user' && 'flex-col items-end', // Changed for user messages
+                message.role === 'user' && 'flex-row-reverse',
                 message.isGreeting && 'justify-center text-center'
               )}
             >
@@ -421,7 +433,7 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
                   onChange={handleFileChange}
                   className="hidden"
                   // you can specify accepted file types
-                  // accept="image/*,application/pdf" 
+                  accept="image/*" 
                 />
                  <label htmlFor="file-upload">
                     <Button
@@ -432,7 +444,6 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
                         onClick={() => {
                           if (attachedFile) {
                             setAttachedFile(null);
-                            toast({ title: 'Anexo removido' });
                           } else {
                             fileInputRef.current?.click();
                           }
@@ -479,5 +490,3 @@ export default function ChatPageWrapper({ agent }: { agent: AIAgent }) {
     </Suspense>
   )
 }
-
-    

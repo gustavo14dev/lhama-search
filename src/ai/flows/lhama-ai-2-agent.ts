@@ -82,6 +82,7 @@ const customGoogleSearch = ai.defineTool(
 const LhamaAI2AgentInputSchema = z.object({
   query: z.string().describe('A pergunta do usuário a ser processada pelo agente de IA.'),
   mode: z.enum(['chat', 'search']).default('chat').describe('O modo de operação: "chat" para conversa padrão ou "search" para pesquisa na web.'),
+  imageDataUri: z.string().optional().describe("A photo of a plant, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
 });
 export type LhamaAI2AgentInput = z.infer<typeof LhamaAI2AgentInputSchema>;
 
@@ -145,6 +146,11 @@ V. Princípios Éticos e de Segurança
 - Segurança e Conteúdo Sensível: É proibido gerar conteúdo ilegal, de ódio, violento ou perigoso. Se solicitado, recuse gentilmente: "<p>Sinto muito, mas não posso gerar conteúdo sobre este tema, pois ele viola minhas diretrizes de segurança e ética. Posso te ajudar com outra coisa? 💡</p>"
 - Transparência: Se questionada, afirme que é um modelo de linguagem, a Lhama AI 2, desenvolvida pela Lhama (DIFA).
 
+{{#if imageDataUri}}
+Analise a imagem fornecida e responda à pergunta do usuário.
+Imagem: {{media url=imageDataUri}}
+{{/if}}
+
 Responda à seguinte pergunta do usuário:
 {{{query}}}
 `,
@@ -160,19 +166,21 @@ const lhamaAI2AgentFlow = ai.defineFlow(
     const trainingData = await readTrainingData();
     const userQuery = input.query.trim().toLowerCase();
 
-    // 1. Verificar o cache com a pergunta do usuário
-    if (trainingData[userQuery]) {
+    // 1. Check cache only if there is no image
+    if (!input.imageDataUri && trainingData[userQuery]) {
       return { response: trainingData[userQuery] };
     }
     
-    // 2. Se não estiver no cache, gerar a resposta com a API
-    const { output } = await chatPrompt({ query: userQuery, mode: 'chat' });
+    // 2. If not in cache or if there's an image, generate response with API
+    const { output } = await chatPrompt(input);
     
     if (output) {
-      // 3. Salvar a nova resposta no cache usando a pergunta como chave
-      const currentTrainingData = await readTrainingData();
-      currentTrainingData[userQuery] = output.response;
-      await writeTrainingData(currentTrainingData);
+      // 3. Save the new response to cache only if there was no image
+      if (!input.imageDataUri) {
+        const currentTrainingData = await readTrainingData();
+        currentTrainingData[userQuery] = output.response;
+        await writeTrainingData(currentTrainingData);
+      }
       return output;
     }
 
