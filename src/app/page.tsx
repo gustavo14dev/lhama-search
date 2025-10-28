@@ -16,7 +16,7 @@ export default function Home() {
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!search.trim()) return;
-    // Redireciona para a nova página de pesquisa
+    // Redireciona para a página de pesquisa na web
     router.push(`/search?q=${encodeURIComponent(search)}`);
   };
 
@@ -85,7 +85,7 @@ export default function Home() {
             ))}
              {filteredAgents.length === 0 && search.trim() && (
                 <div className="py-12 text-center text-muted-foreground">
-                    <p>Nenhum agente de IA encontrado para "{search}"</p>
+                    <p>Nenhuma IA foi encontrada. Continue para pesquisar na web</p>
                 </div>
             )}
           </div>
