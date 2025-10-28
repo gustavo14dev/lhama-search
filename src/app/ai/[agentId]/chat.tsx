@@ -29,6 +29,7 @@ import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
+import MathRenderer from './MathRenderer';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -334,7 +335,7 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
                   </div>
                 ) : (
                   <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-2 first:prose-p:mt-0 last:prose-p:mb-0 prose-ul:my-2 prose-li:my-1 prose-hr:my-4 prose-headings:my-4 prose-blockquote:my-2 prose-code:rounded prose-code:bg-muted prose-code:px-1 prose-code:font-mono prose-code:text-sm prose-table:my-4 prose-table:w-full prose-th:border prose-th:p-2 prose-td:border prose-td:p-2">
-                    <div dangerouslySetInnerHTML={{ __html: message.content }} />
+                    <MathRenderer htmlContent={message.content} />
                     {message.searchResults && message.searchResults.length > 0 && (
                       <div className="mt-4 space-y-4">
                          <hr/>
