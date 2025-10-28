@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { getAgentById, agentLogos } from '@/lib/agents';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import Chat from './chat';
+import ChatPageWrapper from './chat';
 
 export default function AgentPage({ params }: { params: { agentId: string } }) {
   const agent = getAgentById(params.agentId);
@@ -35,7 +35,7 @@ export default function AgentPage({ params }: { params: { agentId: string } }) {
           </div>
         </div>
       </header>
-      <Chat agent={agent} />
+      <ChatPageWrapper agent={agent} />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect, type FormEvent } from 'react';
+import { useState, useRef, useEffect, type FormEvent, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { lhamaAI2Agent, type LhamaAI2AgentOutput } from '@/ai/flows/lhama-ai-2-agent';
 import type { AIAgent } from '@/lib/agents';
 import { agentLogos } from '@/lib/agents';
@@ -86,24 +87,39 @@ const SearchResultCard = ({ result }: { result: SearchResult }) => {
   );
 };
 
+function ChatComponent({ agent }: { agent: AIAgent }) {
+  const searchParams = useSearchParams();
+  const initialQuery = searchParams.get('q');
 
-export default function Chat({ agent }: { agent: AIAgent }) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'assistant',
-      content: '', // O conteúdo é renderizado condicionalmente
-      isGreeting: true,
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showSlashCommands, setShowSlashCommands] = useState(false);
   const [searchMode, setSearchMode] = useState<'chat' | 'search'>('chat');
+  const [hasStarted, setHasStarted] = useState(false);
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
+  useEffect(() => {
+    if (initialQuery && !hasStarted) {
+      setSearchMode('search');
+      executeSubmit(initialQuery, 'search');
+    }
+  }, [initialQuery, hasStarted]);
+
+  useEffect(() => {
+    if (!hasStarted && messages.length === 0) {
+      setMessages([
+        {
+          role: 'assistant',
+          content: '',
+          isGreeting: true,
+        },
+      ]);
+    }
+  }, [hasStarted, messages]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -121,7 +137,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       const scrollHeight = textareaRef.current.scrollHeight;
-      const maxHeight = 200; // Corresponde a max-h-52
+      const maxHeight = 200; 
       textareaRef.current.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
     }
   }, [input]);
@@ -139,8 +155,9 @@ export default function Chat({ agent }: { agent: AIAgent }) {
   const executeSubmit = async (currentInput: string, currentMode: 'chat' | 'search') => {
     if (!currentInput.trim()) return;
 
+    setHasStarted(true);
     const userMessage: Message = { role: 'user', content: currentInput };
-    // Remove a saudação inicial (se houver) e adiciona a mensagem do usuário
+    
     setMessages((prev) => [...prev.filter(m => !m.isGreeting), userMessage]);
     setInput('');
     setShowSlashCommands(false);
@@ -161,9 +178,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
         title: 'Ocorreu um erro',
         description: 'Falha ao obter resposta da IA. Por favor, tente novamente.',
       });
-      // Se der erro, coloca a mensagem do usuário de volta no input
       setInput(currentInput);
-      // Remove a mensagem do usuário da lista de mensagens
       setMessages(prev => prev.filter(msg => msg.content !== currentInput));
     } finally {
       setIsLoading(false);
@@ -373,4 +388,12 @@ export default function Chat({ agent }: { agent: AIAgent }) {
       </div>
     </div>
   );
+}
+
+export default function ChatPageWrapper({ agent }: { agent: AIAgent }) {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <ChatComponent agent={agent} />
+    </Suspense>
+  )
 }
