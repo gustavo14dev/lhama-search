@@ -95,6 +95,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showSlashCommands, setShowSlashCommands] = useState(false);
+  const [searchMode, setSearchMode] = useState<'chat' | 'search'>('chat');
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -132,7 +133,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
     }
   };
   
-  const handleSubmit = async (mode: 'chat' | 'search' = 'chat') => {
+  const handleSubmit = async () => {
     if (!input.trim() || isLoading) return;
 
     const userMessage: Message = { role: 'user', content: input };
@@ -143,7 +144,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
     setIsLoading(true);
 
     try {
-      const result = await lhamaAI2Agent({ query: currentInput, mode });
+      const result = await lhamaAI2Agent({ query: currentInput, mode: searchMode });
       const assistantMessage: Message = {
         role: 'assistant',
         content: result.response,
@@ -168,17 +169,24 @@ export default function Chat({ agent }: { agent: AIAgent }) {
   
   const handleFormSubmit = (e: FormEvent) => {
     e.preventDefault();
-    handleSubmit('chat');
+    handleSubmit();
   };
-  
-  const pesquisarNaWeb = () => {
-    handleSubmit('search');
-  };
+
+  const toggleSearchMode = () => {
+    setSearchMode(prev => (prev === 'search' ? 'chat' : 'search'));
+    toast({
+      title: `Pesquisa da Web ${searchMode === 'search' ? 'Desativada' : 'Ativada'}`,
+      description: searchMode === 'search' 
+        ? 'A IA voltará a responder com seu conhecimento base.'
+        : 'A IA agora usará a web para respostas mais atuais.',
+      duration: 3000,
+    });
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit('chat');
+      handleSubmit();
     }
      if (e.key === 'Escape') {
       setShowSlashCommands(false);
@@ -305,7 +313,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
               value={input}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder={`Mensagem para ${agent.name}...`}
+              placeholder={`Mensagem para ${agent.name}... (${searchMode === 'search' ? 'Pesquisa da Web ativada' : 'Chat'})`}
               className="max-h-52 flex-1 resize-none border-none bg-transparent p-2 text-base shadow-none focus-visible:ring-0"
               rows={1}
               autoFocus
@@ -318,9 +326,9 @@ export default function Chat({ agent }: { agent: AIAgent }) {
                 </Button>
                  <Button
                     type="button"
-                    variant="outline"
+                    variant={searchMode === 'search' ? "secondary" : "outline"}
                     className="h-9 rounded-full px-4"
-                    onClick={pesquisarNaWeb}
+                    onClick={toggleSearchMode}
                 >
                     <Globe className="mr-2 h-5 w-5" />
                     Pesquisa da Web
