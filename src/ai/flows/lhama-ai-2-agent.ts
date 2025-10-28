@@ -163,20 +163,22 @@ const lhamaAI2AgentFlow = ai.defineFlow(
     outputSchema: LhamaAI2AgentOutputSchema,
   },
   async (input) => {
-    const trainingData = await readTrainingData();
-    const userQuery = input.query.trim().toLowerCase();
-
-    // 1. Check cache only if there is no image
-    if (!input.imageDataUri && trainingData[userQuery]) {
-      return { response: trainingData[userQuery] };
+    // Apenas verifique o cache se NÃO houver uma imagem
+    if (!input.imageDataUri) {
+      const trainingData = await readTrainingData();
+      const userQuery = input.query.trim().toLowerCase();
+      if (trainingData[userQuery]) {
+        return { response: trainingData[userQuery] };
+      }
     }
     
-    // 2. If not in cache or if there's an image, generate response with API
+    // Se não estiver no cache ou se houver uma imagem, gere a resposta com a IA
     const { output } = await chatPrompt(input);
     
     if (output) {
-      // 3. Save the new response to cache only if there was no image
+      // Salve a nova resposta no cache apenas se NÃO houver uma imagem
       if (!input.imageDataUri) {
+        const userQuery = input.query.trim().toLowerCase();
         const currentTrainingData = await readTrainingData();
         currentTrainingData[userQuery] = output.response;
         await writeTrainingData(currentTrainingData);
