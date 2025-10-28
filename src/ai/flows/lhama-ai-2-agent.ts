@@ -10,6 +10,10 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { promises as fs } from 'fs';
+import { imageGenerationFlow } from './image-generation-flow';
+
+// Re-export for client-side usage
+export { imageGenerationFlow };
 
 // Use a relative path from the project root.
 const trainingFilePath = 'src/ai/training.json';
@@ -88,6 +92,7 @@ export type LhamaAI2AgentInput = z.infer<typeof LhamaAI2AgentInputSchema>;
 
 const LhamaAI2AgentOutputSchema = z.object({
   response: z.string().describe('A resposta gerada pela IA para a pergunta do usuário, formatada em HTML.'),
+  isImage: z.boolean().optional().describe('Flag para indicar se a resposta é uma imagem.'),
   searchResults: z.array(z.object({
     title: z.string(),
     link: z.string(),
