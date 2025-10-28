@@ -16,8 +16,8 @@ export default function Home() {
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!search.trim()) return;
-    // Redireciona para a página de chat do agente com a query de pesquisa
-    router.push(`/ai/lhama-ai-2?q=${encodeURIComponent(search)}`);
+    // Redireciona para a nova página de pesquisa
+    router.push(`/search?q=${encodeURIComponent(search)}`);
   };
 
   const filteredAgents = search.trim()
