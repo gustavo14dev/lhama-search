@@ -468,8 +468,11 @@ function ChatComponent({ agent }: { agent: AIAgent }) {
                  </label>
                  <Button
                     type="button"
-                    variant={searchMode === 'search' ? "secondary" : "ghost"}
-                    className="h-9 rounded-full px-4 text-muted-foreground"
+                    variant="ghost"
+                    className={cn(
+                      "h-9 rounded-full px-4 text-muted-foreground",
+                      searchMode === 'search' && "bg-muted/80 text-foreground hover:bg-muted"
+                    )}
                     onClick={toggleSearchMode}
                 >
                     <Globe className="mr-2 h-5 w-5" />
