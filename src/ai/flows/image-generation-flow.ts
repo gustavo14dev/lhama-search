@@ -11,7 +11,7 @@ import type { ImageGenerationOutput } from '@/ai/types';
 import { ImageGenerationOutputSchema } from '@/ai/types';
 
 export async function imageGenerationFlow(promptText: string): Promise<ImageGenerationOutput> {
-    const { output } = await ai.generate({
+    const {output} = await ai.generate({
         model: 'googleai/gemini-2.5-flash',
         prompt: `Based on the following prompt, generate a short, descriptive, URL-friendly slug for an image. For example, if the prompt is "a majestic lion in the savanna at sunset", a good slug would be "majestic-lion-savanna-sunset". Just return the slug and nothing else. Prompt: ${promptText}`,
     });
