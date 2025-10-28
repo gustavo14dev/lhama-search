@@ -2,7 +2,7 @@
 /**
  * @fileOverview A flow for generating images using a text prompt.
  * 
- * - imageGenerationFlow - A function that takes a text prompt and returns a generated image.
+ * - imageGenerationFlow - A function that takes a text prompt and returns a generated image URL.
  */
 
 import { ai } from '@/ai/genkit';

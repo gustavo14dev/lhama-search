@@ -32,6 +32,7 @@ import { Textarea } from '@/components/ui/textarea';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import MathRenderer from './MathRenderer';
+import React from 'react';
 
 interface Message {
   role: 'user' | 'assistant';
