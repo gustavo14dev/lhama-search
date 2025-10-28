@@ -23,7 +23,7 @@ export async function imageGenerationFlow(promptText: string): Promise<ImageGene
     }
 
     // Use a placeholder service to generate an image URL based on the slug.
-    const imageUrl = `https://placehold.co/512x512/png?text=${encodeURIComponent(slug)}`;
+    const imageUrl = `https://picsum.photos/seed/${slug}/512/512`;
     
     return { imageUrl };
 }
