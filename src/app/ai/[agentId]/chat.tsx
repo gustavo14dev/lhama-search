@@ -17,6 +17,7 @@ import {
   Lightbulb,
   Telescope,
   BookOpen,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
@@ -351,6 +352,7 @@ export default function Chat({ agent }: { agent: AIAgent }) {
                 >
                     <Globe className="mr-2 h-5 w-5" />
                     Pesquisa da Web
+                    {searchMode === 'search' && <X className="ml-2 h-4 w-4" />}
                 </Button>
               </div>
               <div className="flex items-center gap-2">
