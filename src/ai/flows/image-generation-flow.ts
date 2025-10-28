@@ -15,18 +15,8 @@ export async function imageGenerationFlow(promptText: string): Promise<ImageGene
         throw new Error('Image generation failed because the prompt was empty.');
     }
     
-    // Use the AI to generate a URL-friendly slug.
-    const { output } = await ai.generate({
-        model: 'googleai/gemini-2.5-flash',
-        prompt: `Create a two-word, hyphen-separated slug in English for an image URL based on the following text: ${promptText}`,
-    });
-
-    if (!output || !output.text) {
-      throw new Error('Image generation failed because the AI returned an empty response.');
-    }
-    
     // Create a URL-friendly slug directly from the user's prompt.
-    const slug = output.text.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const slug = promptText.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 
     if (!slug) {
         throw new Error('Could not generate a valid slug from the prompt.');
