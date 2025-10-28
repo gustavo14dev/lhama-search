@@ -140,7 +140,8 @@ export default function Chat({ agent }: { agent: AIAgent }) {
     if (!currentInput.trim()) return;
 
     const userMessage: Message = { role: 'user', content: currentInput };
-    setMessages((prev) => [...prev, userMessage]);
+    // Remove a saudação inicial (se houver) e adiciona a mensagem do usuário
+    setMessages((prev) => [...prev.filter(m => !m.isGreeting), userMessage]);
     setInput('');
     setShowSlashCommands(false);
     setIsLoading(true);
